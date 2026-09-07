@@ -133,15 +133,75 @@ async def link_all_facts(
     facts: List[Fact],
     api_key: Optional[str] = None
 ) -> List[Relationship]:
-    """Find and classify all cross-document fact relationships."""
+    """Find and classify all cross-document fact relationships concurrently."""
+    import asyncio
     pairs = find_candidate_pairs(facts)
     print(f"  Found {len(pairs)} candidate pairs for comparison...")
     
-    relationships = []
-    for i, (fact_a, fact_b) in enumerate(pairs):
-        print(f"  Analyzing pair {i+1}/{len(pairs)}...")
-        rel = await classify_relationship(fact_a, fact_b, api_key)
-        if rel:
-            relationships.append(rel)
+    semaphore = asyncio.Semaphore(10)
     
+    async def process_pair_with_semaphore(i: int, fact_a: Fact, fact_b: Fact):
+        print(f"  Analyzing pair {i+1}/{len(pairs)}...")
+        async with semaphore:
+            return await classify_relationship(fact_a, fact_b, api_key)
+            
+    tasks = [process_pair_with_semaphore(i, fact_a, fact_b) for i, (fact_a, fact_b) in enumerate(pairs)]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    relationships = []
+    for rel in results:
+        if isinstance(rel, Relationship):
+            relationships.append(rel)
+        elif isinstance(rel, Exception):
+            print(f"Error linking pair: {rel}")
+            
+    return relationships
+
+
+def find_candidate_pairs_incremental(new_facts: List[Fact], existing_facts: List[Fact]) -> List[Tuple[Fact, Fact]]:
+    """Find fact pairs between new facts and existing facts."""
+    pairs = []
+    for fact_a in new_facts:
+        for fact_b in existing_facts:
+            # Only compare facts from different documents
+            if fact_a.source_doc_id == fact_b.source_doc_id:
+                continue
+            # Check if categories match or overlap
+            if fact_a.category == fact_b.category:
+                pairs.append((fact_a, fact_b))
+            # Check for value overlap (same numeric value)
+            elif (fact_a.value and fact_b.value and 
+                  fact_a.value == fact_b.value and 
+                  fact_a.unit == fact_b.unit):
+                pairs.append((fact_a, fact_b))
+    return pairs
+
+
+async def link_incremental(
+    new_facts: List[Fact],
+    existing_facts: List[Fact],
+    api_key: Optional[str] = None
+) -> List[Relationship]:
+    """Find and classify relationships only for newly added facts concurrently."""
+    import asyncio
+    pairs = find_candidate_pairs_incremental(new_facts, existing_facts)
+    print(f"  Found {len(pairs)} candidate pairs for incremental linking...")
+    
+    semaphore = asyncio.Semaphore(10)
+    
+    async def process_pair_with_semaphore(i: int, fact_a: Fact, fact_b: Fact):
+        print(f"  Analyzing incremental pair {i+1}/{len(pairs)}...")
+        async with semaphore:
+            return await classify_relationship(fact_a, fact_b, api_key)
+            
+    tasks = [process_pair_with_semaphore(i, fact_a, fact_b) for i, (fact_a, fact_b) in enumerate(pairs)]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    relationships = []
+    for rel in results:
+        if isinstance(rel, Relationship):
+            relationships.append(rel)
+        elif isinstance(rel, Exception):
+            print(f"Error linking pair: {rel}")
+            
     return relationships

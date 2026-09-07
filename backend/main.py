@@ -130,6 +130,16 @@ async def upload_pdf(file: UploadFile = File(...)):
         facts = await extract_all_facts(chunks, doc_id, file.filename, api_key)
         for fact in facts:
             store.add_fact(fact)
+            
+        # --- NEW: Incremental Linking ---
+        existing_facts = [f for f in store.get_all_facts() if f.source_doc_id != doc_id]
+        if existing_facts and facts:
+            from fact_linker import link_incremental
+            new_rels = await link_incremental(facts, existing_facts, api_key)
+            for rel in new_rels:
+                store.add_relationship(rel)
+        # --------------------------------
+                
         doc.status = "processed"
     else:
         doc.status = "processed"

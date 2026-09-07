@@ -109,12 +109,26 @@ async def extract_all_facts(
     doc_name: str,
     api_key: Optional[str] = None
 ) -> List[Fact]:
-    """Extract facts from all chunks of a document."""
-    all_facts = []
-    for i, chunk in enumerate(chunks):
+    """Extract facts from all chunks of a document concurrently."""
+    import asyncio
+    
+    # Limit concurrent API calls to avoid rate limiting (e.g. 5 concurrent)
+    semaphore = asyncio.Semaphore(5)
+    
+    async def process_chunk_with_semaphore(i: int, chunk: dict):
         print(f"  Extracting chunk {i+1}/{len(chunks)} (pages {chunk['page_numbers']})...")
-        facts = await extract_facts_from_chunk(chunk, doc_id, doc_name, api_key)
-        all_facts.extend(facts)
+        async with semaphore:
+            return await extract_facts_from_chunk(chunk, doc_id, doc_name, api_key)
+
+    tasks = [process_chunk_with_semaphore(i, chunk) for i, chunk in enumerate(chunks)]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    all_facts = []
+    for facts in results:
+        if isinstance(facts, list):
+            all_facts.extend(facts)
+        else:
+            print(f"Error extracting chunk: {facts}")
     
     # Deduplicate by statement similarity (simple exact match)
     seen = set()
