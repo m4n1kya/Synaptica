@@ -65,8 +65,8 @@ const EvidenceViewer = {
         if (!rel || !factA || !factB) return '';
 
         const typeLabels = {
-            'corroborates': { label: 'Agreement', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>', badge: 'badge-corroborate' },
-            'contradicts': { label: 'Discrepancy', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>', badge: 'badge-contradict' },
+            'corroborates': { label: 'Corroboration', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>', badge: 'badge-corroborate' },
+            'contradicts': { label: 'Contradiction', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>', badge: 'badge-contradict' },
             'contextual_difference': { label: 'Variation', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>', badge: 'badge-contextual' },
             'extraction_failure': { label: 'Processing Error', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>', badge: 'badge-failure' }
         };
@@ -145,8 +145,8 @@ const EvidenceViewer = {
         if (!container) return;
 
         const typeConfig = {
-            'corroboration': { color: 'var(--color-corroborate)', bgColor: 'var(--color-corroborate-bg)', badgeClass: 'badge-corroborate', label: 'Case 1: Agreement' },
-            'contradiction': { color: 'var(--color-contradict)', bgColor: 'var(--color-contradict-bg)', badgeClass: 'badge-contradict', label: 'Case 2: Discrepancy' },
+            'corroboration': { color: 'var(--color-corroborate)', bgColor: 'var(--color-corroborate-bg)', badgeClass: 'badge-corroborate', label: 'Case 1: Corroboration' },
+            'contradiction': { color: 'var(--color-contradict)', bgColor: 'var(--color-contradict-bg)', badgeClass: 'badge-contradict', label: 'Case 2: Contradiction' },
             'contextual': { color: 'var(--color-contextual)', bgColor: 'var(--color-contextual-bg)', badgeClass: 'badge-contextual', label: 'Case 3: Variation' },
             'extraction_failure': { color: 'var(--color-failure)', bgColor: 'var(--color-failure-bg)', badgeClass: 'badge-failure', label: 'Case 4: Processing Error' }
         };
@@ -178,8 +178,8 @@ const EvidenceViewer = {
 
         /* Semantic colors - Blue Monochromatic Palette */
         const typeConfig = {
-            'corroboration': { color: '#90CAF9', bgColor: 'rgba(144, 202, 249, 0.08)', border: 'rgba(144, 202, 249, 0.25)', label: 'Agreement' },
-            'contradiction': { color: '#2196F3', bgColor: 'rgba(33, 150, 243, 0.08)', border: 'rgba(33, 150, 243, 0.25)', label: 'Discrepancy' },
+            'corroboration': { color: '#90CAF9', bgColor: 'rgba(144, 202, 249, 0.08)', border: 'rgba(144, 202, 249, 0.25)', label: 'Corroboration' },
+            'contradiction': { color: '#2196F3', bgColor: 'rgba(33, 150, 243, 0.08)', border: 'rgba(33, 150, 243, 0.25)', label: 'Contradiction' },
             'contextual': { color: '#E3F2FD', bgColor: 'rgba(227, 242, 253, 0.08)', border: 'rgba(227, 242, 253, 0.25)', label: 'Variation' },
             'extraction_failure': { color: '#1565C0', bgColor: 'rgba(21, 101, 192, 0.2)', border: 'rgba(21, 101, 192, 0.5)', label: 'Processing Error' }
         };
