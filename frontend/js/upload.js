@@ -94,7 +94,7 @@ const UploadManager = {
     },
 
     async simulateProcessing(files) {
-        const progressBar = document.getElementById('upload-progress-bar');
+        const progressBar = document.getElementById('upload-progress-fill');
         const statusText = document.getElementById('upload-status-text');
         const steps = ['step-parse', 'step-extract', 'step-link', 'step-done'];
 
@@ -126,9 +126,11 @@ const UploadManager = {
             // Update step indicators
             steps.forEach((s, i) => {
                 const el = document.getElementById(s);
-                if (i < stage.step) el.className = 'progress-step done';
-                else if (i === stage.step) el.className = 'progress-step active';
-                else el.className = 'progress-step';
+                if (el) {
+                    if (i < stage.step) el.className = 'progress-step done';
+                    else if (i === stage.step) el.className = 'progress-step active';
+                    else el.className = 'progress-step';
+                }
             });
         }
 
