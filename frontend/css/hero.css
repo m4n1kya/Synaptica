@@ -1,0 +1,202 @@
+/* ══════════════════════════════════════════════════════════════
+   SYNAPTICA — Premium Hero Section (GSAP)
+   ══════════════════════════════════════════════════════════════ */
+
+.hero {
+  --font-size-h1: 8.32vw;
+  --font-size-desc-1: 1.11vw;
+  --font-size-desc-2: 1.11vw;
+  --font-size-header-text-1: 0.97vw;
+  --font-size-btn-1: 1.25vw;
+  --font-size-btn-2: 1.25vw;
+  
+  --line-height-h1: 7.43vw;
+  --line-height-desc-1: 1.11vw;
+  --line-height-desc-2: 1.11vw;
+  --line-height-header-text-1: 0.97vw;
+  --line-height-btn-1: 1.25vw;
+  --line-height-btn-2: 1.25vw;
+  
+  --main-font: "Reforma 1918", "Playfair Display", serif;
+  --sub-font: "Poppins", sans-serif;
+  
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  margin-top: -64px; /* offset the navbar height */
+}
+
+.hero .title-h1 {
+  font-size: var(--font-size-h1);
+  line-height: var(--line-height-h1);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--main-font);
+}
+
+.hero .desc-1 {
+  font-size: var(--font-size-desc-1);
+  line-height: var(--line-height-desc-1);
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-family: var(--sub-font);
+}
+
+.hero .btn-1 {
+  font-size: var(--font-size-btn-2);
+  line-height: var(--line-height-btn-2);
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: var(--sub-font);
+}
+
+.hero-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(10, 10, 10, 0.8) 0%, rgba(10, 10, 10, 0.5) 50%, rgba(0, 0, 0, 0.95) 100%);
+  z-index: -1;
+}
+
+.hero .hero-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 2.22vw;
+  position: relative;
+}
+
+.hero .title-block {
+  padding-left: 10.27vw;
+  position: relative;
+  z-index: 2;
+}
+
+.hero .title-h1 {
+  text-transform: uppercase;
+}
+
+.hero .title-h1 span {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  display: inline-block;
+}
+
+.hero .title-h1 .title-row {
+  display: flex;
+}
+
+.hero .title-h1 .title-charts-cont {
+  display: flex;
+  overflow: hidden;
+}
+
+.hero .title-h1 .title-row-2 {
+  padding-left: 5.76vw;
+}
+
+.hero .title-h1 #ry {
+  margin-right: 2.57vw;
+}
+
+.hero .title-h1 #tells {
+  margin-right: 2.2vw;
+}
+
+.hero .title-h1 #a {
+  margin-right: 2.2vw;
+}
+
+.hero .first-desc {
+  position: absolute;
+  top: -3.47vw;
+  right: 25.69vw;
+  overflow: hidden;
+  display: flex;
+}
+
+.hero .second-desc {
+  position: absolute;
+  bottom: -6.94vw;
+  left: 33.68vw;
+  overflow: hidden;
+  display: flex;
+}
+
+.hero .copyright {
+  position: absolute;
+  bottom: 2.22vw;
+  left: 2.22vw;
+  overflow: hidden;
+  display: flex;
+  z-index: 2;
+}
+
+.hero .scroll-to {
+  position: absolute;
+  bottom: 2.22vw;
+  left: 53.82vw;
+  width: 10.27vw;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.hero .scroll-to__row {
+  overflow: hidden;
+  display: flex;
+}
+
+.hero .book-btn {
+  position: absolute;
+  bottom: 2.22vw;
+  right: 2.22vw;
+  width: 11.8vw;
+  height: 11.8vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.hero .book-btn__circle {
+  width: 11.8vw;
+  height: 11.8vw;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 100%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.4s ease;
+  backdrop-filter: blur(5px);
+}
+
+.hero .book-btn:hover .book-btn__circle {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255,255,255,0.6);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.hero .book-btn .btn-text {
+  width: 8.88vw;
+  text-align: center;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}

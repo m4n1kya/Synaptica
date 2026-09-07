@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synaptica | AI-Powered Fact Knowledge Layer</title>
+    <meta name="description" content="Transform scattered evidence into connected intelligence. Synaptica extracts, links, and reconciles facts across PDF documents using AI.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/design-system.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/layout.css">
+    <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/hero.css">
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/CustomEase.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ═══ Navigation ═══ -->
+        <nav class="navbar" id="main-navbar">
+            <a href="#/" class="logo">
+                <span class="gradient-text">SYNAPTICA</span>
+            </a>
+            <div class="nav-links" id="nav-links">
+                <a href="#/" class="nav-item active" data-view="landing">Home</a>
+                <a href="#/upload" class="nav-item" data-view="upload">Upload</a>
+                <a href="#/matrix" class="nav-item" data-view="matrix">Matrix</a>
+                <a href="#/facts" class="nav-item" data-view="facts">Facts</a>
+                <a href="#/relationships" class="nav-item" data-view="relationships">Relationships</a>
+                <a href="#/cases" class="nav-item" data-view="cases">Cases</a>
+                <a href="#/analytics" class="nav-item" data-view="analytics">Graph</a>
+            </div>
+            <div>
+                <a href="#/upload" class="btn btn-primary btn-sm" id="btn-new-analysis">New Analysis</a>
+            </div>
+        </nav>
+
+        <!-- ═══ Landing View ═══ -->
+        <div id="landing-view" class="view-container active">
+            <section class="hero">
+                <video class="hero-video" autoplay muted loop>
+                    <source src="https://cdn.zajno.com/dev/codepen/fossil/fossil.mp4" type="video/mp4"/>
+                </video>
+                <div class="hero-overlay"></div>
+                
+                <div class="hero-container">
+                    <div class="title-block">
+                        <div class="title-h1">
+                            <div class="title-row title-row-1">
+                                <div class="title-charts-cont" id="eve"><span>Eve</span></div>
+                                <div class="title-charts-cont" id="ry"><span>ry</span></div>
+                                <div class="title-charts-cont" id="fo"><span>Re</span></div>
+                                <div class="title-charts-cont" id="ssil"><span>cord</span></div>
+                            </div>
+                            <div class="title-row title-row-2">
+                                <div class="title-charts-cont" id="tells"><span>tells</span></div>
+                                <div class="title-charts-cont" id="a"><span>a</span></div>
+                                <div class="title-charts-cont" id="st"><span>st</span></div>
+                                <div class="title-charts-cont" id="ory"><span>ory</span></div>
+                            </div>
+                        </div>
+                        <div class="first-desc">
+                            <span class="desc-1">Extract facts. Discover relationships.</span>
+                        </div>
+                        <div class="second-desc">
+                            <span class="desc-1">We are ready!</span>
+                        </div>
+                    </div>
+                
+                    <div class="copyright">
+                        <span class="desc-1">2026 SYNAPTICA ©</span>
+                    </div>
+                    
+                    <div class="scroll-to">
+                        <div class="scroll-to__row">
+                            <span class="desc-1">Explore</span>
+                        </div>
+                        <div class="scroll-to__row">
+                            <span class="desc-1">the Knowledge Layer</span>
+                        </div>
+                    </div>
+                    
+                    <a href="#/upload" class="book-btn">
+                        <div class="book-btn__circle"></div>
+                        <div class="btn-text">
+                            <span class="btn-1">
+                                New Analysis
+                            </span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <section class="features-section" style="width: 100%; max-width: 100%;">
+                <div class="grid-3">
+                    <div class="glass-card reveal">
+                        <div class="feature-card-icon" style="background: transparent; font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--text-primary); font-weight: 700; font-style: italic;">I</div>
+                        <div class="feature-number">Step 01</div>
+                        <h3>Extract</h3>
+                        <p class="text-secondary mt-3">Parse complex PDFs into atomic, structured facts with deep semantic understanding. Every claim is grounded in source evidence.</p>
+                    </div>
+                    <div class="glass-card reveal">
+                        <div class="feature-card-icon" style="background: transparent; font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--text-primary); font-weight: 700; font-style: italic;">II</div>
+                        <div class="feature-number">Step 02</div>
+                        <h3>Link</h3>
+                        <p class="text-secondary mt-3">Autonomously discover relationships across documents — agreements, discrepancies, and variations.</p>
+                    </div>
+                    <div class="glass-card reveal">
+                        <div class="feature-card-icon" style="background: transparent; font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--text-primary); font-weight: 700; font-style: italic;">III</div>
+                        <div class="feature-number">Step 03</div>
+                        <h3>Reconcile</h3>
+                        <p class="text-secondary mt-3">AI-powered reasoning explains why facts agree or differ. Trace every assertion back to its source with full transparency.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ═══ Analytics View ═══ -->
+        <div id="analytics-view" class="view-container">
+            <div class="container-wide" style="max-width: 1400px; margin: 0 auto; padding: var(--space-8) var(--space-6);">
+                <div class="page-header" style="margin-bottom: var(--space-8);">
+                    <div>
+                        <h1 class="page-title">Analytics Dashboard</h1>
+                        <p class="page-desc">High-level statistics and data visualizations for your knowledge layer.</p>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="dashboard-grid" id="analytics-kpis" style="margin-bottom: var(--space-8);">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Charts Layout -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6); margin-bottom: var(--space-6);">
+                    <!-- Main Area Chart -->
+                    <div class="glass-card" style="padding: var(--space-6);">
+                        <h3 style="margin-bottom: var(--space-2); font-size: 1.1rem;">Extraction Timeline</h3>
+                        <p class="text-secondary" style="margin-bottom: var(--space-6); font-size: 0.9rem;">Facts discovered over time.</p>
+                        <div style="height: 350px; position: relative; width: 100%;">
+                            <canvas id="timeline-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Donut Chart -->
+                    <div class="glass-card" style="padding: var(--space-6);">
+                        <h3 style="margin-bottom: var(--space-2); font-size: 1.1rem;">Relationship Distribution</h3>
+                        <p class="text-secondary" style="margin-bottom: var(--space-6); font-size: 0.9rem;">Breakdown of corroborations vs contradictions.</p>
+                        <div style="height: 350px; position: relative; width: 100%; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="distribution-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row -->
+                <div style="display: grid; grid-template-columns: 1fr; gap: var(--space-6);">
+                    <!-- Bar Chart -->
+                    <div class="glass-card" style="padding: var(--space-6);">
+                        <h3 style="margin-bottom: var(--space-2); font-size: 1.1rem;">Document Density</h3>
+                        <p class="text-secondary" style="margin-bottom: var(--space-6); font-size: 0.9rem;">Number of facts extracted per document.</p>
+                        <div style="height: 300px; position: relative; width: 100%;">
+                            <canvas id="density-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Upload View ═══ -->
+        <div id="upload-view" class="view-container">
+            <div class="container" style="max-width: 800px;">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Upload Documents</h1>
+                        <p class="page-desc">Add PDF documents to build your knowledge layer.</p>
+                    </div>
+                </div>
+
+                <div id="dropzone" class="upload-area glow-border animate-fade-in">
+                    <div style="width: 72px; height: 72px; margin: 0 auto var(--space-5); color: var(--text-muted); transition: all 0.3s ease;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%;">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <path d="M12 12v6"/>
+                            <path d="M9 15l3-3 3 3"/>
+                        </svg>
+                    </div>
+                    <h3>Drag & Drop PDFs here</h3>
+                    <p class="text-secondary mt-3 mb-4">or click to browse your files</p>
+                    <button class="btn btn-glass" id="browse-btn">Browse Files</button>
+                    <input type="file" id="file-input" multiple accept=".pdf" style="display: none;">
+                    <p class="text-muted text-xs mt-4">Supports PDF files up to 100MB</p>
+                </div>
+
+                <div id="upload-file-list" class="file-list" style="display: none;">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div id="upload-progress-section" style="display: none; margin-top: var(--space-8);">
+                    <div class="glass-card-static">
+                        <h4 style="margin-bottom: var(--space-4);">Processing Documents</h4>
+                        <div class="progress-container">
+                            <div class="progress-bar-track">
+                                <div id="upload-progress-fill" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: var(--space-3);">
+                            <span id="upload-status-text" class="text-secondary text-sm">Extracting text...</span>
+                            <span id="upload-percentage" class="text-sm font-mono" style="color: var(--primary);">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Matrix View ═══ -->
+        <div id="matrix-view" class="view-container">
+            <div class="container-wide">
+                <div class="page-header flex-between">
+                    <div>
+                        <h1 class="page-title">Knowledge Matrix</h1>
+                        <p class="page-desc">Overview of all processed documents and their extracted schemas.</p>
+                    </div>
+                    <div class="tabs" id="matrix-dataset-tabs" style="margin-bottom: 0;">
+                        <button class="tab-btn active" data-dataset="all">All Documents</button>
+                        <button class="tab-btn" data-dataset="india-macroeconomy">Macroeconomy</button>
+                        <button class="tab-btn" data-dataset="delhivery">Delhivery</button>
+                    </div>
+                    <button class="btn btn-outline" id="btn-export-matrix">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export CSV
+                    </button>
+                </div>
+
+                <div class="glass-card" style="padding: 0; overflow: hidden; border: 1px solid var(--border-light);">
+                    <div style="padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--border-light); display: flex; gap: var(--space-4); align-items: center; background: rgba(255,255,255,0.02);">
+                        <div style="position: relative; flex: 1; max-width: 320px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="matrix-search" class="form-input" placeholder="Search documents..." style="width: 100%; padding-left: 36px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-light); color: var(--text-primary); border-radius: 6px; padding-top: 8px; padding-bottom: 8px;">
+                        </div>
+                        <div style="position: relative; width: 200px;">
+                            <select id="matrix-filter" class="form-select" style="width: 100%; appearance: none; background: rgba(0,0,0,0.2); border: 1px solid var(--border-light); color: var(--text-primary); border-radius: 6px; padding: 8px 12px; padding-right: 32px; cursor: pointer;">
+                                <option value="all" style="background: #111; color: #fff;">All Types</option>
+                                <option value="india-macroeconomy" style="background: #111; color: #fff;">Macroeconomy</option>
+                                <option value="delhivery" style="background: #111; color: #fff;">Delhivery</option>
+                            </select>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="matrix-table">
+                            <thead>
+                                <tr>
+                                    <th>Document</th>
+                                    <th>Type</th>
+                                    <th>Entities Found</th>
+                                    <th>Date Processed</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Facts View ═══ -->
+        <div id="facts-view" class="view-container">
+            <div class="container-wide">
+                <div class="page-header flex-between">
+                    <div>
+                        <h1 class="page-title">Extracted Facts</h1>
+                        <p class="page-desc">Individual data points extracted from your corpus.</p>
+                    </div>
+                    <input type="text" id="facts-search" class="form-input" placeholder="Search facts..." style="max-width: 300px;">
+                </div>
+                <div id="facts-filters" class="tabs" style="margin-bottom: var(--space-6);">
+                    <button class="tab-btn active" data-category="all">All Facts</button>
+                </div>
+                <div id="facts-grid" class="dashboard-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Relationships View ═══ -->
+        <div id="relationships-view" class="view-container">
+            <div class="container-wide">
+                <div class="page-header">
+                    <h1 class="page-title">Relationships & Conflicts</h1>
+                    <p class="page-desc">How facts across documents support or contradict each other.</p>
+                </div>
+                <div id="rel-type-tabs" class="tabs" style="margin-bottom: var(--space-6);">
+                    <button class="tab-btn active" data-type="all">All</button>
+                    <button class="tab-btn" data-type="corroborates">Agreements</button>
+                    <button class="tab-btn" data-type="contradicts">Discrepancies</button>
+                </div>
+                <div id="relationships-list" style="display: flex; flex-direction: column; gap: var(--space-4);">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- ═══ Cases View ═══ -->
+        <div id="cases-view" class="view-container">
+            <div class="container-wide">
+                <div class="page-header flex-between">
+                    <div>
+                        <h1 class="page-title">Active Cases</h1>
+                        <p class="page-desc">Resolved and pending investigations of data variations.</p>
+                    </div>
+                    <button class="btn btn-primary">New Case</button>
+                </div>
+
+                <div class="dashboard-grid" id="cases-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="/js/api.js"></script>
+    <script src="/js/animations.js"></script>
+    <script src="/js/upload.js"></script>
+    <script src="/js/matrix-view.js"></script>
+    <script src="/js/facts-panel.js"></script>
+    <script src="/js/evidence-viewer.js"></script>
+    <script src="/js/graph-view.js"></script>
+    <script src="/js/analytics-view.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+/* ══════════════════════════════════════════════════════════════
+   SYNAPTICA — Animations
+   Keyframes, scroll reveals, micro-interactions, loading states
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-24px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px var(--accent-glow); }
+    50% { box-shadow: 0 0 20px var(--accent-glow), 0 0 40px rgba(59, 130, 246, 0.1); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes borderGlow {
+    0%, 100% { border-color: var(--glass-border); }
+    50% { border-color: rgba(59, 130, 246, 0.3); }
+}
+
+@keyframes typewriter {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes dotPulse {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Scroll Reveal ───────────────────────────────────────────── */
+.reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: all 0.6s var(--ease-out);
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Staggered Entry ─────────────────────────────────────────── */
+.animate-slide-up {
+    animation: fadeInUp 0.8s var(--ease-out) both;
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+.animate-fade-in {
+    animation: fadeIn 0.5s var(--ease-out) both;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.3s var(--ease-out) both;
+}
+
+/* ── Card Stagger (applied by JS) ────────────────────────────── */
+[data-stagger] {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: all 0.4s var(--ease-out);
+}
+
+[data-stagger].entered {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Loading Dots ────────────────────────────────────────────── */
+.loading-dots {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.loading-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    animation: dotPulse 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0; }
+
+/* ── Spinner ─────────────────────────────────────────────────── */
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--glass-border);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ── Gradient Background Animation ───────────────────────────── */
+.animated-gradient {
+    background: linear-gradient(-45deg, #060b14, #121d33, #0c2547, #1a1040);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+
+/* ── Hover Lift ──────────────────────────────────────────────── */
+.hover-lift {
+    transition: transform var(--duration-base) var(--ease-out),
+                box-shadow var(--duration-base) var(--ease-out);
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ── Glowing Border ──────────────────────────────────────────── */
+.glow-border {
+    animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* ── Pulse Glow (for upload zone) ────────────────────────────── */
+.pulse-glow {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* ── Number Counter (JS controlled) ──────────────────────────── */
+.counter {
+    transition: all 0.05s linear;
+}
+
+/* ── Page Transition Overlay ─────────────────────────────────── */
+.page-transition {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-primary);
+    z-index: var(--z-modal);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.page-transition.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ── Canvas Glow Effect ──────────────────────────────────────── */
+.canvas-container {
+    position: relative;
+}
+
+.canvas-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to top, var(--bg-primary), transparent);
+    pointer-events: none;
+}
+
+/* ── Floating Animation for Hero ─────────────────────────────── */
+.float-slow {
+    animation: float 6s ease-in-out infinite;
+}
+
+.float-medium {
+    animation: float 4s ease-in-out infinite;
+    animation-delay: 1s;
+}
+
+.float-fast {
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 0.5s;
+}
+
+/* ── Reduced Motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .reveal {
+        opacity: 1;
+        transform: none;
+    }
+}
