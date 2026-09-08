@@ -90,7 +90,7 @@ const MatrixView = {
         html += '</tr></thead><tbody>';
 
         docs.forEach(doc => {
-            const isDemo = doc.isDemo ? `<span style="font-size: 0.65rem; background: rgba(255,165,0,0.15); color: orange; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; border: 1px solid rgba(255,165,0,0.3);">DEMO</span>` : '';
+            const isDemo = doc.isDemo ? `<span style="font-size: 0.65rem; background: rgba(144,202,249,0.15); color: #90CAF9; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; border: 1px solid rgba(144,202,249,0.3);">DEMO</span>` : '';
             html += `<tr>`;
             html += `<td class="doc-cell">
                 <div style="display:flex; align-items:center; gap:8px;">
