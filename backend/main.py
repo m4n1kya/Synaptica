@@ -189,6 +189,14 @@ async def upload_pdf(file: UploadFile = File(...), user_id: Optional[str] = Depe
     
     if api_key:
         chunks = chunk_pages(doc_content)
+        
+        # Render has a strict 100-second request timeout.
+        # Sequential processing of 50 chunks takes ~250s and causes 502 Bad Gateway.
+        # We limit to the first 6 chunks (~15 pages) to ensure it completes within 30-40s.
+        if len(chunks) > 6:
+            print(f"Limiting {len(chunks)} chunks to 6 to avoid Render timeout.")
+            chunks = chunks[:6]
+            
         facts = await extract_all_facts(chunks, doc_id, file.filename, api_key)
         
         if user_id:
