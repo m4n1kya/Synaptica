@@ -1,4 +1,39 @@
 /**
+ * Synaptica — Main Application Logic
+ * Handles routing, initialization, and global state.
+ */
+
+const Auth = {
+    openModal(mode) {
+        const modal = document.getElementById('auth-modal');
+        if (!modal) return;
+        this.switchMode(mode);
+        modal.classList.add('active');
+    },
+    
+    closeModal() {
+        const modal = document.getElementById('auth-modal');
+        if (modal) modal.classList.remove('active');
+    },
+    
+    switchMode(mode) {
+        const title = document.getElementById('auth-title');
+        const switchText = document.getElementById('auth-switch-text');
+        const submitBtn = document.getElementById('auth-submit-btn');
+        
+        if (mode === 'signup') {
+            title.innerText = 'Sign up for Synaptica';
+            submitBtn.innerText = 'Create Account';
+            switchText.innerHTML = 'Already have an account? <a href="#" onclick="Auth.switchMode(\'signin\')">Log in</a>';
+        } else {
+            title.innerText = 'Log in to Synaptica';
+            submitBtn.innerText = 'Continue';
+            switchText.innerHTML = 'Logging in for the first time? <a href="#" onclick="Auth.switchMode(\'signup\')">Sign up</a>';
+        }
+    }
+};
+
+/**
  * Synaptica — Main Application Controller
  * Handles routing, state management, and initialization.
  */
