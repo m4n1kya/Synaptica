@@ -9,6 +9,11 @@ const FactsPanel = {
     searchQuery: '',
 
     async render() {
+        const grid = document.getElementById('facts-grid');
+        if (grid) {
+            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 60px;"><div class="loading-spinner" style="margin: 0 auto 16px;"></div><div style="color: var(--text-muted);">Waking up AI engine & loading Extracted Facts...</div></div>';
+        }
+
         try {
             this.facts = await API.getFacts();
             this.categories = await API.getCategories();

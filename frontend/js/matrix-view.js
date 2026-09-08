@@ -8,6 +8,11 @@ const MatrixView = {
     activeDataset: 'all',
 
     async render() {
+        const table = document.getElementById('matrix-table');
+        if (table) {
+            table.innerHTML = '<tbody><tr><td colspan="5" class="text-center" style="padding: 60px;"><div class="loading-spinner" style="margin: 0 auto 16px;"></div><div style="color: var(--text-muted);">Waking up AI engine & loading Knowledge Matrix...</div></td></tr></tbody>';
+        }
+
         try {
             this.facts = await API.getFacts();
             this.documents = await API.getDocuments();

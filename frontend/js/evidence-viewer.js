@@ -9,6 +9,11 @@ const EvidenceViewer = {
 
     // ── Relationships View ──────────────────────────────────
     async renderRelationships() {
+        const list = document.getElementById('relationships-list');
+        if (list) {
+            list.innerHTML = '<div style="text-align: center; padding: 60px;"><div class="loading-spinner" style="margin: 0 auto 16px;"></div><div style="color: var(--text-muted);">Waking up AI engine & loading Relationships...</div></div>';
+        }
+
         try {
             this.relationships = await API.getRelationships();
         } catch (e) {
@@ -134,6 +139,11 @@ const EvidenceViewer = {
 
     // ── Cases View ──────────────────────────────────────────
     async renderCases() {
+        const grid = document.getElementById('cases-grid');
+        if (grid) {
+            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 60px;"><div class="loading-spinner" style="margin: 0 auto 16px;"></div><div style="color: var(--text-muted);">Waking up AI engine & loading Cases...</div></div>';
+        }
+
         try {
             this.cases = await API.getCases();
         } catch (e) {

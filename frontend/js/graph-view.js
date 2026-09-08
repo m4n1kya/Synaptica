@@ -19,6 +19,11 @@ const GraphView = {
     transform: { x: 0, y: 0, scale: 1 },
 
     async render() {
+        const container = document.getElementById('graph-container');
+        if (container) {
+            container.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;"><div class="loading-spinner" style="margin: 0 auto 16px;"></div><div style="color: var(--text-muted);">Waking up AI engine & building Graph...</div></div>';
+        }
+
         try {
             this.facts = await API.getFacts();
             this.relationships = await API.getRelationships();
