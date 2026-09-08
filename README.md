@@ -25,9 +25,6 @@ Synaptica is an AI-powered fact knowledge layer designed to transform scattered 
 ### Live Deployment
 The application is continuously deployed and can be viewed live at: **[Insert Your Render Link Here]**
 
-## Video Demo
-[Insert Link to your 3-minute YouTube/Loom demo video here]
-
 ## Approach
 
 *   **Architecture**: Synaptica operates on a dual-layer architecture. A lightweight Python/FastAPI backend handles document ingestion, NLP processing, and relationship mapping. A vanilla HTML5/JS/CSS frontend (without heavy frameworks like React) consumes the REST API.
