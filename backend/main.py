@@ -190,11 +190,17 @@ async def upload_pdf(file: UploadFile = File(...), user_id: Optional[str] = Depe
 
     return {
         "doc_id": doc_id,
+        "filename": file.filename,
         "document": doc.model_dump(),
         "facts": [f.model_dump() for f in facts],
         "relationships": [r.model_dump() for r in new_rels],
+        "fact_count": len(facts),
         "status": doc.status,
-        "message": "Processed successfully"
+        "message": "Processed successfully",
+        "debug": {
+            "gemini_key_present": bool(api_key),
+            "chunks_processed": len(chunk_pages(doc_content)) if api_key else 0,
+        }
     }
 
 # -- Facts ------------------------------------------------------------------
