@@ -79,6 +79,29 @@ async def debug_env():
         "FIREBASE_SERVICE_ACCOUNT": "SET" if os.environ.get("FIREBASE_SERVICE_ACCOUNT") else "NOT_SET",
     }
 
+@app.get("/api/debug/gemini")
+async def debug_gemini():
+    """Test Gemini API directly and return raw response."""
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        return {"error": "GEMINI_API_KEY not set"}
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = await model.generate_content_async(
+            'Return this JSON array: [{"statement": "Test fact", "category": "General", "confidence": 0.9}]',
+            generation_config={"temperature": 0.1}
+        )
+        return {
+            "status": "ok",
+            "raw_text": response.text,
+            "text_length": len(response.text),
+            "finish_reason": str(response.candidates[0].finish_reason) if response.candidates else "unknown"
+        }
+    except Exception as e:
+        return {"error": type(e).__name__, "detail": str(e)}
+
 @app.get("/api/stats")
 async def get_stats(user_id: Optional[str] = Depends(get_optional_user)):
     if not user_id:
