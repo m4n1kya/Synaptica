@@ -145,6 +145,8 @@ const UploadManager = {
             { delay: 20000, pct: 60, step: 1, text: 'Processing document chunks...' },
             { delay: 40000, pct: 72, step: 2, text: 'Discovering cross-document relationships...' },
             { delay: 60000, pct: 82, step: 2, text: 'Almost done — finalising knowledge graph...' },
+            { delay: 80000, pct: 90, step: 2, text: 'Applying API rate-limit backoff (if needed)...' },
+            { delay: 95000, pct: 96, step: 2, text: 'Waiting for final response from server...' },
         ];
 
         let done = false;
