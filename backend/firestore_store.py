@@ -3,6 +3,7 @@ from firebase_admin import credentials, firestore
 from typing import List, Optional
 from models import Fact, Relationship, Document, CaseStudy
 import os
+import json
 
 # Initialize Firebase Admin once
 if not firebase_admin._apps:
@@ -10,14 +11,24 @@ if not firebase_admin._apps:
     if os.path.exists(cred_path):
         cred = credentials.Certificate(cred_path)
         firebase_admin.initialize_app(cred)
+    elif os.environ.get("FIREBASE_SERVICE_ACCOUNT"):
+        cert_dict = json.loads(os.environ.get("FIREBASE_SERVICE_ACCOUNT"))
+        cred = credentials.Certificate(cert_dict)
+        firebase_admin.initialize_app(cred)
     else:
-        firebase_admin.initialize_app()
+        # Fallback (will likely fail on firestore.client() if no default creds exist)
+        try:
+            firebase_admin.initialize_app()
+        except Exception:
+            pass
 
-db = firestore.client()
+def get_db():
+    return firestore.client()
 
 class FirestoreStore:
     def __init__(self, user_id: str):
         self.user_id = user_id
+        db = get_db()
         self.user_ref = db.collection('users').document(user_id)
 
     def add_document(self, doc: Document) -> Document:
