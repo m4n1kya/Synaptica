@@ -102,7 +102,7 @@ async def classify_relationship(
         )
 
         response = await client.aio.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-3.6-flash",
             contents=prompt,
         )
 

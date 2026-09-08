@@ -89,7 +89,7 @@ async def debug_gemini():
         from google import genai
         client = genai.Client(api_key=api_key)
         response = await client.aio.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-3.6-flash",
             contents='Return this JSON array: [{"statement": "Test fact works", "category": "General", "confidence": 0.9}]',
         )
         return {

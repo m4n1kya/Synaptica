@@ -77,7 +77,7 @@ async def extract_facts_from_chunk(
         )
 
         response = await client.aio.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-3.6-flash",
             contents=prompt,
         )
 
