@@ -5,9 +5,15 @@
 const UploadManager = {
     init() {
         this.loadHistory();
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('file-input');
-        const browseBtn = document.getElementById('browse-btn');
+        
+        this.setupDropzone('dropzone', 'file-input', 'browse-btn');
+        this.setupDropzone('dropzone-home', 'file-input-home', 'browse-btn-home');
+    },
+
+    setupDropzone(dropzoneId, inputId, btnId) {
+        const dropzone = document.getElementById(dropzoneId);
+        const fileInput = document.getElementById(inputId);
+        const browseBtn = document.getElementById(btnId);
 
         if (!dropzone) return;
 
@@ -20,7 +26,13 @@ const UploadManager = {
 
         // File input change
         fileInput?.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) this.handleFiles(Array.from(e.target.files));
+            if (e.target.files.length > 0) {
+                // If this is the home dropzone, switch to upload tab automatically
+                if (dropzoneId === 'dropzone-home') {
+                    window.location.hash = '#/upload';
+                }
+                this.handleFiles(Array.from(e.target.files));
+            }
         });
 
         // Drag and drop
@@ -35,7 +47,12 @@ const UploadManager = {
             e.preventDefault();
             dropzone.classList.remove('dragover');
             const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.pdf'));
-            if (files.length > 0) this.handleFiles(files);
+            if (files.length > 0) {
+                if (dropzoneId === 'dropzone-home') {
+                    window.location.hash = '#/upload';
+                }
+                this.handleFiles(files);
+            }
         });
     },
 
@@ -163,8 +180,8 @@ const UploadManager = {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         </div>
                         <div>
-                            <div style="font-weight: 500;">${doc.name}</div>
-                            <div class="text-muted text-xs">Added: ${new Date(doc.uploaded_at).toLocaleDateString()} &middot; Facts: ${doc.fact_count}</div>
+                            <div style="font-weight: 500;">${doc.filename}</div>
+                            <div class="text-muted text-xs">Added: ${new Date(doc.upload_time).toLocaleDateString()} &middot; Facts: ${doc.fact_count}</div>
                         </div>
                     </div>
                 </div>

@@ -121,7 +121,32 @@
                         <div class="feature-card-icon" style="background: transparent; font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--text-primary); font-weight: 700; font-style: italic;">III</div>
                         <div class="feature-number">Step 03</div>
                         <h3>Reconcile</h3>
-                        <p class="text-secondary mt-3">AI-powered reasoning explains why facts agree or differ. Trace every assertion back to its source with full transparency.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ Home Upload Section ═══ -->
+            <section id="upload-section-target" style="padding: var(--space-8) 0 var(--space-12) 0;">
+                <div class="container" style="max-width: 800px;">
+                    <div class="page-header text-center" style="margin-bottom: var(--space-8);">
+                        <h2 class="page-title" style="font-size: 2.5rem;">Begin Your Analysis</h2>
+                        <p class="page-desc" style="max-width: 600px; margin: var(--space-4) auto 0;">Upload your PDF documents to start extracting and linking facts automatically.</p>
+                    </div>
+
+                    <div id="dropzone-home" class="upload-area glow-border animate-fade-in">
+                        <div style="width: 72px; height: 72px; margin: 0 auto var(--space-5); color: var(--text-muted); transition: all 0.3s ease;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%;">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <path d="M12 12v6"/>
+                                <path d="M9 15l3-3 3 3"/>
+                            </svg>
+                        </div>
+                        <h3>Drag & Drop PDFs here</h3>
+                        <p class="text-secondary mt-3 mb-4">or click to browse your files</p>
+                        <button class="btn btn-glass" id="browse-btn-home">Browse Files</button>
+                        <input type="file" id="file-input-home" multiple accept=".pdf" style="display: none;">
+                        <p class="text-muted text-xs mt-4">Supports PDF files up to 100MB</p>
                     </div>
                 </div>
             </section>
