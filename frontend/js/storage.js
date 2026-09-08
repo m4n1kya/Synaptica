@@ -202,9 +202,17 @@ window.StorageManager = {
         // If unauthenticated, save the returned data locally
         if (!token && res.document) {
             await putLocal('documents', res.document);
-            for (let f of res.facts) await putLocal('facts', f);
-            for (let r of res.relationships) await putLocal('relationships', r);
+            if (res.facts) {
+                for (let f of res.facts) await putLocal('facts', f);
+            }
+            if (res.relationships) {
+                for (let r of res.relationships) await putLocal('relationships', r);
+            }
         }
+        
+        // Always clear the demo data cache so new data shows on next render
+        this.demoData = null;
+        
         return res;
     }
 };

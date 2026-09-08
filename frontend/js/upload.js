@@ -167,7 +167,14 @@ const UploadManager = {
         // Redirect to matrix view after completion
         await new Promise(r => setTimeout(r, 1200));
         window.location.hash = '#/matrix';
+        // Force re-render so new document immediately appears
+        setTimeout(() => {
+            if (window.MatrixView) MatrixView.render();
+        }, 200);
         Animations.showToast('Documents processed successfully!', 'success');
+        // Reset queue
+        this.queuedFiles = [];
+        this.renderQueue();
     },
 
     async loadHistory() {
