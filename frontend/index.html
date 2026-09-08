@@ -35,7 +35,6 @@
             </a>
             <div class="nav-links" id="nav-links">
                 <a href="#/" class="nav-item active" data-view="landing">Home</a>
-                <a href="#/upload" class="nav-item" data-view="upload">Upload</a>
                 <a href="#/matrix" class="nav-item" data-view="matrix">Matrix</a>
                 <a href="#/facts" class="nav-item" data-view="facts">Facts</a>
                 <a href="#/relationships" class="nav-item" data-view="relationships">Relationships</a>
@@ -43,7 +42,7 @@
                 <a href="#/analytics" class="nav-item" data-view="analytics">Graph</a>
             </div>
             <div>
-                <a href="#/upload" class="btn btn-primary btn-sm" id="btn-new-analysis">New Analysis</a>
+                <a href="#/" class="btn btn-primary btn-sm" id="btn-new-analysis" onclick="window.location.hash='#/'; setTimeout(() => document.getElementById('upload-section-target').scrollIntoView({behavior: 'smooth'}), 100); return false;">New Analysis</a>
             </div>
         </nav>
 
@@ -92,7 +91,7 @@
                         </div>
                     </div>
                     
-                    <a href="#/upload" class="book-btn">
+                    <a href="#upload-section-target" class="book-btn" onclick="document.getElementById('upload-section-target').scrollIntoView({behavior: 'smooth'}); return false;">
                         <div class="book-btn__circle"></div>
                         <div class="btn-text">
                             <span class="btn-1">
@@ -124,10 +123,54 @@
                         <p class="text-secondary mt-3">AI-powered reasoning explains why facts agree or differ. Trace every assertion back to its source with full transparency.</p>
                     </div>
                 </div>
+                </div>
             </section>
-        </div>
 
-        <!-- ═══ Analytics View ═══ -->
+            <!-- ═══ Upload Section ═══ -->
+            <section id="upload-section-target" style="padding: var(--space-12) 0;">
+                <div class="container" style="max-width: 800px;">
+                    <div class="page-header text-center" style="margin-bottom: var(--space-8);">
+                        <h2 class="page-title" style="font-size: 2.5rem;">Begin Your Analysis</h2>
+                        <p class="page-desc" style="max-width: 600px; margin: var(--space-4) auto 0;">Upload your PDF documents to start extracting and linking facts automatically.</p>
+                    </div>
+
+                    <div id="dropzone" class="upload-area glow-border animate-fade-in">
+                        <div style="width: 72px; height: 72px; margin: 0 auto var(--space-5); color: var(--text-muted); transition: all 0.3s ease;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%;">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <path d="M12 12v6"/>
+                                <path d="M9 15l3-3 3 3"/>
+                            </svg>
+                        </div>
+                        <h3>Drag & Drop PDFs here</h3>
+                        <p class="text-secondary mt-3 mb-4">or click to browse your files</p>
+                        <button class="btn btn-glass" id="browse-btn">Browse Files</button>
+                        <input type="file" id="file-input" multiple accept=".pdf" style="display: none;">
+                        <p class="text-muted text-xs mt-4">Supports PDF files up to 100MB</p>
+                    </div>
+
+                    <div id="upload-file-list" class="file-list" style="display: none;">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div id="upload-progress-section" style="display: none; margin-top: var(--space-8);">
+                        <div class="glass-card-static">
+                            <h4 style="margin-bottom: var(--space-4);">Processing Documents</h4>
+                            <div class="progress-container">
+                                <div class="progress-bar-track">
+                                    <div id="upload-progress-fill" class="progress-bar-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: var(--space-3);">
+                                <span id="upload-status-text" class="text-secondary text-sm">Extracting text...</span>
+                                <span id="upload-percentage" class="text-sm font-mono" style="color: var(--primary);">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>        <!-- ═══ Analytics View ═══ -->
         <div id="analytics-view" class="view-container">
             <div class="container-wide" style="max-width: 1400px; margin: 0 auto; padding: var(--space-8) var(--space-6);">
                 <div class="page-header" style="margin-bottom: var(--space-8);">
@@ -177,52 +220,7 @@
             </div>
         </div>
 
-        <!-- ═══ Upload View ═══ -->
-        <div id="upload-view" class="view-container">
-            <div class="container" style="max-width: 800px;">
-                <div class="page-header">
-                    <div>
-                        <h1 class="page-title">Upload Documents</h1>
-                        <p class="page-desc">Add PDF documents to build your knowledge layer.</p>
-                    </div>
-                </div>
-
-                <div id="dropzone" class="upload-area glow-border animate-fade-in">
-                    <div style="width: 72px; height: 72px; margin: 0 auto var(--space-5); color: var(--text-muted); transition: all 0.3s ease;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%;">
-                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                            <path d="M12 12v6"/>
-                            <path d="M9 15l3-3 3 3"/>
-                        </svg>
-                    </div>
-                    <h3>Drag & Drop PDFs here</h3>
-                    <p class="text-secondary mt-3 mb-4">or click to browse your files</p>
-                    <button class="btn btn-glass" id="browse-btn">Browse Files</button>
-                    <input type="file" id="file-input" multiple accept=".pdf" style="display: none;">
-                    <p class="text-muted text-xs mt-4">Supports PDF files up to 100MB</p>
-                </div>
-
-                <div id="upload-file-list" class="file-list" style="display: none;">
-                    <!-- Populated by JS -->
-                </div>
-
-                <div id="upload-progress-section" style="display: none; margin-top: var(--space-8);">
-                    <div class="glass-card-static">
-                        <h4 style="margin-bottom: var(--space-4);">Processing Documents</h4>
-                        <div class="progress-container">
-                            <div class="progress-bar-track">
-                                <div id="upload-progress-fill" class="progress-bar-fill" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: var(--space-3);">
-                            <span id="upload-status-text" class="text-secondary text-sm">Extracting text...</span>
-                            <span id="upload-percentage" class="text-sm font-mono" style="color: var(--primary);">0%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Removed separate Upload View -->
 
         <!-- ═══ Matrix View ═══ -->
         <div id="matrix-view" class="view-container">
