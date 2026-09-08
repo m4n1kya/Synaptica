@@ -57,6 +57,21 @@ const deleteLocal = async (storeName, id) => {
 
 // Main StorageManager
 window.StorageManager = {
+    demoData: null,
+    
+    async getStaticDemoData() {
+        if (!this.demoData) {
+            try {
+                const res = await fetch('/demo.json');
+                this.demoData = await res.json();
+            } catch(e) {
+                console.error("Failed to load static demo data", e);
+                this.demoData = { documents: [], facts: [], relationships: [], categories: [], stats: {documents:0, facts:0, relationships:0, cases:0}, cases: [] };
+            }
+        }
+        return this.demoData;
+    },
+
     async getToken() {
         if (window.FirebaseAuth && window.FirebaseAuth.auth.currentUser) {
             return await window.FirebaseAuth.auth.currentUser.getIdToken();
@@ -68,8 +83,9 @@ window.StorageManager = {
         const token = await this.getToken();
         if (token) return await API.getDocuments(token);
         
-        // Unauthenticated: Merge Demo Data + Local Data
-        const demoDocs = await API.getDocuments(); // without token -> returns demo
+        // Unauthenticated: Merge Static Demo Data + Local Data
+        const demo = await this.getStaticDemoData();
+        const demoDocs = JSON.parse(JSON.stringify(demo.documents));
         const localDocs = await getLocal('documents');
         demoDocs.forEach(d => d.isDemo = true);
         localDocs.forEach(d => d.isLocal = true);
@@ -94,8 +110,12 @@ window.StorageManager = {
         const token = await this.getToken();
         if (token) return await API.getFacts(category, doc_id, token);
         
-        // Unauthenticated: Merge Demo Data + Local Data
-        const demoFacts = await API.getFacts(category, doc_id);
+        // Unauthenticated: Merge Static Demo Data + Local Data
+        const demo = await this.getStaticDemoData();
+        let demoFacts = JSON.parse(JSON.stringify(demo.facts));
+        if (category) demoFacts = demoFacts.filter(f => f.category === category);
+        if (doc_id) demoFacts = demoFacts.filter(f => f.source_doc_id === doc_id);
+        
         let localFacts = await getLocal('facts');
         if (category) localFacts = localFacts.filter(f => f.category === category);
         if (doc_id) localFacts = localFacts.filter(f => f.source_doc_id === doc_id);
@@ -108,7 +128,19 @@ window.StorageManager = {
         const token = await this.getToken();
         if (token) return await API.getRelationships(null, token);
         
-        const demoRels = await API.getRelationships();
+        const demo = await this.getStaticDemoData();
+        const demoRels = JSON.parse(JSON.stringify(demo.relationships));
+        const demoFacts = demo.facts;
+        
+        // Enriched demo
+        const enrichedDemo = demoRels.map(rel => {
+            return {
+                relationship: rel,
+                fact_a: demoFacts.find(f => f.id === rel.fact_a_id) || null,
+                fact_b: demoFacts.find(f => f.id === rel.fact_b_id) || null
+            }
+        });
+
         const localRels = await getLocal('relationships');
         const facts = await getLocal('facts');
         const enrichedLocal = localRels.map(rel => {
@@ -118,24 +150,22 @@ window.StorageManager = {
                 fact_b: facts.find(f => f.id === rel.fact_b_id) || null
             }
         });
-        return [...demoRels, ...enrichedLocal];
+        return [...enrichedDemo, ...enrichedLocal];
     },
 
     async getCategories() {
         const token = await this.getToken();
         if (token) return await API.getCategories(token);
 
-        // Fetch demo categories
-        const demoCats = await API.getCategories();
-        
-        // Combine with local facts
+        const demo = await this.getStaticDemoData();
         const facts = await getLocal('facts');
         const catMap = {};
-        demoCats.forEach(c => catMap[c.name] = c.count);
         
+        demo.categories.forEach(c => catMap[c.name] = c.count);
         facts.forEach(f => {
             catMap[f.category] = (catMap[f.category] || 0) + 1;
         });
+        
         return Object.entries(catMap)
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => b.count - a.count);
@@ -145,23 +175,24 @@ window.StorageManager = {
         const token = await this.getToken();
         if (token) return await API.getStats(token);
         
-        const demoStats = await API.getStats();
+        const demo = await this.getStaticDemoData();
         const localDocs = await getLocal('documents');
         const localFacts = await getLocal('facts');
         const localRels = await getLocal('relationships');
         
         return {
-            documents: demoStats.documents + localDocs.length,
-            facts: demoStats.facts + localFacts.length,
-            relationships: demoStats.relationships + localRels.length,
-            cases: demoStats.cases
+            documents: demo.stats.documents + localDocs.length,
+            facts: demo.stats.facts + localFacts.length,
+            relationships: demo.stats.relationships + localRels.length,
+            cases: demo.stats.cases
         };
     },
     
     async getCases() {
         const token = await this.getToken();
         if (token) return await API.getCases(token);
-        return await API.getCases();
+        const demo = await this.getStaticDemoData();
+        return demo.cases || [];
     },
 
     async uploadPdf(file) {
