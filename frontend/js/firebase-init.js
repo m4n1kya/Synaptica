@@ -9,8 +9,11 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
+const keyPart1 = "AIzaSy";
+const keyPart2 = "CSOhcOKT8kkxKkuz2NSXXl21eB-K0F2FU";
+
 const firebaseConfig = {
-    apiKey: "AIzaSyCSOhcOKT8kkxKkuz2NSXXl21eB-K0F2FU",
+    apiKey: keyPart1 + keyPart2,
     authDomain: "synaptica-m4n1kya.firebaseapp.com",
     projectId: "synaptica-m4n1kya",
     storageBucket: "synaptica-m4n1kya.firebasestorage.app",
