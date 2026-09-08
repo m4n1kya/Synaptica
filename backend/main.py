@@ -86,18 +86,16 @@ async def debug_gemini():
     if not api_key:
         return {"error": "GEMINI_API_KEY not set"}
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = await model.generate_content_async(
-            'Return this JSON array: [{"statement": "Test fact", "category": "General", "confidence": 0.9}]',
-            generation_config={"temperature": 0.1}
+        from google import genai
+        client = genai.Client(api_key=api_key)
+        response = await client.aio.models.generate_content(
+            model="gemini-2.0-flash",
+            contents='Return this JSON array: [{"statement": "Test fact works", "category": "General", "confidence": 0.9}]',
         )
         return {
             "status": "ok",
             "raw_text": response.text,
             "text_length": len(response.text),
-            "finish_reason": str(response.candidates[0].finish_reason) if response.candidates else "unknown"
         }
     except Exception as e:
         return {"error": type(e).__name__, "detail": str(e)}

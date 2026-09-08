@@ -4,9 +4,11 @@ Cross-document fact comparison and relationship classification using LLM.
 """
 import json
 import os
+import re
 import uuid
 from typing import List, Optional, Tuple
 from models import Fact, Relationship
+
 
 
 LINKING_PROMPT = """You are an expert at comparing facts across documents. Given two facts from different sources, determine their relationship.
@@ -77,9 +79,8 @@ async def classify_relationship(
         return None
 
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        from google import genai
+        client = genai.Client(api_key=api_key)
 
         prompt = LINKING_PROMPT.format(
             doc_a=fact_a.source_doc_name,
@@ -100,15 +101,15 @@ async def classify_relationship(
             evidence_b=fact_b.evidence_text[:500],
         )
 
-        response = await model.generate_content_async(
-            prompt,
-            generation_config={
-                "response_mime_type": "application/json",
-                "temperature": 0.1,
-            }
+        response = await client.aio.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
         )
 
-        result = json.loads(response.text)
+        raw = response.text.strip()
+        raw = re.sub(r'^```(?:json)?\s*', '', raw, flags=re.MULTILINE)
+        raw = re.sub(r'\s*```\s*$', '', raw, flags=re.MULTILINE)
+        result = json.loads(raw)
         
         if result.get("relationship_type") == "unrelated":
             return None
