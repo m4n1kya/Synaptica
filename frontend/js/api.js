@@ -3,7 +3,17 @@
  * Handles all communication with the FastAPI backend.
  */
 const API = {
-    baseUrl: window.location.origin,
+    // If hosted on localhost, use localhost. Otherwise, route all API calls to the Render backend.
+    baseUrl: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+        ? window.location.origin 
+        : 'https://synaptica-7ha3.onrender.com',
+
+    async wakeUpBackend() {
+        try {
+            // Silently ping the backend to wake up the Render free tier instance
+            fetch(`${this.baseUrl}/api/documents`).catch(() => {});
+        } catch (e) {}
+    },
 
     async request(endpoint, options = {}) {
         try {

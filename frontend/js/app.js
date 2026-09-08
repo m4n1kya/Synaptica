@@ -149,5 +149,6 @@ const App = {
 
 // Start application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    API.wakeUpBackend(); // Wake up the Render backend in the background
     App.init();
 });
