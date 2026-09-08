@@ -71,6 +71,14 @@ def get_optional_user(user_id: Optional[str] = Depends(get_current_user)):
 async def health_check():
     return {"status": "ok", "service": "synaptica", "version": "1.0.0"}
 
+@app.get("/api/debug/env")
+async def debug_env():
+    """Check critical environment variables (values masked)."""
+    return {
+        "GEMINI_API_KEY": "SET" if os.environ.get("GEMINI_API_KEY") else "MISSING",
+        "FIREBASE_SERVICE_ACCOUNT": "SET" if os.environ.get("FIREBASE_SERVICE_ACCOUNT") else "NOT_SET",
+    }
+
 @app.get("/api/stats")
 async def get_stats(user_id: Optional[str] = Depends(get_optional_user)):
     if not user_id:
