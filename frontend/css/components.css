@@ -875,16 +875,12 @@
 }
 
 .auth-modal-content {
-    width: 100%;
-    max-width: 900px;
-    height: 600px;
+    width: 100vw;
+    height: 100vh;
     background: #050505;
-    border-radius: 12px;
     display: flex;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
     transform: translateY(20px);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -895,8 +891,8 @@
 
 .auth-close {
     position: absolute;
-    top: 16px;
-    left: 16px;
+    top: 24px;
+    left: 24px;
     background: rgba(255,255,255,0.1);
     border: none;
     color: #fff;
