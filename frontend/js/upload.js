@@ -132,11 +132,19 @@ const UploadManager = {
             if (percentageText) percentageText.textContent = '10%';
             const result = await StorageManager.uploadPdf(files[0]);
             uploaded = true;
-            Animations.showToast(`Uploaded ${result.filename} — ${result.fact_count} facts extracted`, 'success');
+            
+            if (result.fact_count === 0 || (result.facts && result.facts.length === 0)) {
+                Animations.showToast(`Warning: 0 facts extracted. Verify Gemini API Key on backend!`, 'error');
+            } else {
+                Animations.showToast(`Uploaded ${result.filename} — ${result.fact_count || result.facts?.length || 0} facts extracted`, 'success');
+            }
             this.loadHistory(); // Refresh history list
         } catch (e) {
-            // Fallback to demo mode
-            console.log('Upload failed, using demo mode:', e);
+            console.error('Upload failed:', e);
+            Animations.showToast('Upload failed: ' + e.message, 'error');
+            statusText.textContent = 'Upload Failed.';
+            if (progressBar) progressBar.style.backgroundColor = 'var(--color-contradict)';
+            return;
         }
 
         for (const stage of stages) {
