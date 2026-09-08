@@ -1,7 +1,7 @@
-"\""
-Synaptica — Main API Server
+"""
+Synaptica - Main API Server
 FastAPI application serving the knowledge layer API and frontend static files.
-"\""
+"""
 import os
 import sys
 import uuid
@@ -28,7 +28,7 @@ from firestore_store import FirestoreStore
 
 app = FastAPI(
     title="Synaptica API",
-    description="AI-Powered Fact Knowledge Layer — Extract, Link, and Reconcile facts across documents",
+    description="AI-Powered Fact Knowledge Layer - Extract, Link, and Reconcile facts across documents",
     version="1.0.0"
 )
 
