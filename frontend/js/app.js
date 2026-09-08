@@ -17,6 +17,7 @@ const Auth = {
     },
     
     switchMode(mode) {
+        this.currentMode = mode;
         const title = document.getElementById('auth-title');
         const switchText = document.getElementById('auth-switch-text');
         const submitBtn = document.getElementById('auth-submit-btn');
@@ -30,8 +31,77 @@ const Auth = {
             submitBtn.innerText = 'Continue';
             switchText.innerHTML = 'Logging in for the first time? <a href="#" onclick="Auth.switchMode(\'signup\')">Sign up</a>';
         }
+    },
+
+    async handleEmailAuth() {
+        const email = document.getElementById('auth-email').value;
+        const password = "Password123!"; // In a real app we'd add a password field to the UI. For this demo, using a default password if missing.
+        
+        try {
+            if (this.currentMode === 'signup') {
+                await window.FirebaseAuth.createUserWithEmailAndPassword(window.FirebaseAuth.auth, email, password);
+            } else {
+                await window.FirebaseAuth.signInWithEmailAndPassword(window.FirebaseAuth.auth, email, password);
+            }
+            this.closeModal();
+            App.initialize(); // Reload views to fetch from cloud
+        } catch (error) {
+            alert(error.message);
+        }
+    },
+
+    async signInWithGoogle() {
+        try {
+            await window.FirebaseAuth.signInWithPopup(window.FirebaseAuth.auth, window.FirebaseAuth.googleProvider);
+            this.closeModal();
+            App.initialize(); // Reload views
+        } catch (error) {
+            console.error("Google Sign-In Error", error);
+            alert("Failed to sign in with Google.");
+        }
+    },
+
+    async signOut() {
+        await window.FirebaseAuth.signOut(window.FirebaseAuth.auth);
+        App.initialize();
     }
 };
+
+// Bind UI Elements when loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Add auth listener
+    setTimeout(() => {
+        if(window.FirebaseAuth) {
+            window.FirebaseAuth.onAuthStateChanged(window.FirebaseAuth.auth, (user) => {
+                const authContainer = document.querySelector('.navbar > div:last-child');
+                if (user) {
+                    authContainer.innerHTML = `
+                        <div style="display: flex; gap: var(--space-3); align-items: center;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                ${user.email.charAt(0).toUpperCase()}
+                            </div>
+                            <button class="btn btn-glass btn-sm" onclick="Auth.signOut()" style="background: transparent; border: none; font-weight: 500;">Sign out</button>
+                        </div>
+                    `;
+                } else {
+                    authContainer.innerHTML = `
+                        <div style="display: flex; gap: var(--space-3); align-items: center;">
+                            <button class="btn btn-glass btn-sm" onclick="Auth.openModal('signin')" style="background: transparent; border: none; font-weight: 500;">Sign in</button>
+                            <button class="btn btn-primary btn-sm" onclick="Auth.openModal('signup')" style="background: #fff; color: #000; font-weight: 600;">Sign up</button>
+                        </div>
+                    `;
+                }
+            });
+
+            // Bind Modal Buttons
+            const submitBtn = document.getElementById('auth-submit-btn');
+            if (submitBtn) submitBtn.onclick = () => Auth.handleEmailAuth();
+
+            const googleBtn = document.querySelector('.auth-google-btn');
+            if (googleBtn) googleBtn.onclick = () => Auth.signInWithGoogle();
+        }
+    }, 500); // Small delay to let firebase-init load
+});
 
 /**
  * Synaptica — Main Application Controller
@@ -162,7 +232,7 @@ const App = {
 
     async updateGlobalStats() {
         try {
-            const stats = await API.getStats();
+            const stats = await StorageManager.getStats();
             
             const factsEl = document.getElementById('stat-facts');
             const relsEl = document.getElementById('stat-relationships');

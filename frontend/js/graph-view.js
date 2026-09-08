@@ -25,8 +25,8 @@ const GraphView = {
         }
 
         try {
-            this.facts = await API.getFacts();
-            this.relationships = await API.getRelationships();
+            this.facts = await StorageManager.getFacts();
+            this.relationships = await StorageManager.getRelationships();
         } catch (e) {
             console.error('Graph data load failed:', e);
             return;

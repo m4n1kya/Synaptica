@@ -15,12 +15,21 @@ const API = {
         } catch (e) {}
     },
 
-    async request(endpoint, options = {}) {
+    async request(endpoint, options = {}, token = null) {
         try {
             const url = `${this.baseUrl}${endpoint}`;
+            
+            const headers = { ...options.headers };
+            if (!(options.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(url, {
-                headers: { 'Content-Type': 'application/json', ...options.headers },
-                ...options
+                ...options,
+                headers
             });
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status} ${response.statusText}`);
@@ -33,56 +42,58 @@ const API = {
     },
 
     // Documents
-    async getDocuments() {
-        return this.request('/api/documents');
+    async getDocuments(token = null) {
+        return this.request('/api/documents', {}, token);
     },
 
-    async getDocument(docId) {
-        return this.request(`/api/documents/${docId}`);
+    async getDocument(docId, token = null) {
+        return this.request(`/api/documents/${docId}`, {}, token);
     },
 
-    async deleteDocument(docId) {
-        return this.request(`/api/documents/${docId}`, { method: 'DELETE' });
+    async deleteDocument(docId, token = null) {
+        return this.request(`/api/documents/${docId}`, { method: 'DELETE' }, token);
     },
 
-    async uploadPdf(file) {
+    async uploadPdf(file, token = null) {
         const formData = new FormData();
         formData.append('file', file);
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
         const response = await fetch(`${this.baseUrl}/api/upload`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers
         });
         if (!response.ok) throw new Error('Upload failed');
         return response.json();
     },
 
     // Facts
-    async getFacts(params = {}) {
+    async getFacts(params = {}, token = null) {
         const query = new URLSearchParams();
         if (params.category) query.set('category', params.category);
         if (params.doc_id) query.set('doc_id', params.doc_id);
         if (params.min_confidence) query.set('min_confidence', params.min_confidence);
         if (params.dataset) query.set('dataset', params.dataset);
         const qs = query.toString();
-        return this.request(`/api/facts${qs ? '?' + qs : ''}`);
+        return this.request(`/api/facts${qs ? '?' + qs : ''}`, {}, token);
     },
 
-    async getFact(factId) {
-        return this.request(`/api/facts/${factId}`);
+    async getFact(factId, token = null) {
+        return this.request(`/api/facts/${factId}`, {}, token);
     },
 
-    async getCategories() {
-        return this.request('/api/categories');
+    async getCategories(token = null) {
+        return this.request('/api/categories', {}, token);
     },
 
     // Relationships
-    async getRelationships(relType = null) {
+    async getRelationships(relType = null, token = null) {
         const qs = relType ? `?rel_type=${relType}` : '';
-        return this.request(`/api/relationships${qs}`);
+        return this.request(`/api/relationships${qs}`, {}, token);
     },
 
-    async getRelationshipStats() {
-        return this.request('/api/relationships/stats');
+    async getRelationshipStats(token = null) {
+        return this.request('/api/relationships/stats', {}, token);
     },
 
     // Cases

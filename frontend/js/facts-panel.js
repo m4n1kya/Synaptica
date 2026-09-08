@@ -15,8 +15,8 @@ const FactsPanel = {
         }
 
         try {
-            this.facts = await API.getFacts();
-            this.categories = await API.getCategories();
+            this.facts = await StorageManager.getFacts();
+            this.categories = await StorageManager.getCategories();
         } catch (e) {
             console.error('Facts load failed:', e);
             return;

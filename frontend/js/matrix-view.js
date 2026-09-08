@@ -14,8 +14,8 @@ const MatrixView = {
         }
 
         try {
-            this.facts = await API.getFacts();
-            this.documents = await API.getDocuments();
+            this.facts = await StorageManager.getFacts();
+            this.documents = await StorageManager.getDocuments();
         } catch (e) {
             console.error('Matrix data load failed:', e);
             return;
@@ -177,7 +177,7 @@ const MatrixView = {
         if (!confirm('Are you sure you want to remove this document and all its extracted facts from the knowledge base?')) return;
         
         try {
-            await API.deleteDocument(docId);
+            await StorageManager.deleteDocument(docId);
             if (window.Animations) Animations.showToast('Document removed successfully', 'success');
             // Re-render
             this.render();

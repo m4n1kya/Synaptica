@@ -15,7 +15,7 @@ const EvidenceViewer = {
         }
 
         try {
-            this.relationships = await API.getRelationships();
+            this.relationships = await StorageManager.getRelationships();
         } catch (e) {
             console.error('Relationships load failed:', e);
             return;
@@ -145,7 +145,7 @@ const EvidenceViewer = {
         }
 
         try {
-            this.cases = await API.getCases();
+            this.cases = await StorageManager.getCases();
         } catch (e) {
             console.error('Cases load failed:', e);
             return;

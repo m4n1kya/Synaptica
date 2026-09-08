@@ -130,7 +130,7 @@ const UploadManager = {
             statusText.textContent = `Uploading ${files[0].name}...`;
             if (progressBar) progressBar.style.width = '10%';
             if (percentageText) percentageText.textContent = '10%';
-            const result = await API.uploadPdf(files[0]);
+            const result = await StorageManager.uploadPdf(files[0]);
             uploaded = true;
             Animations.showToast(`Uploaded ${result.filename} — ${result.fact_count} facts extracted`, 'success');
             this.loadHistory(); // Refresh history list
@@ -167,7 +167,7 @@ const UploadManager = {
         if (!historyList) return;
         
         try {
-            const docs = await API.getDocuments();
+            const docs = await StorageManager.getDocuments();
             if (!docs || docs.length === 0) {
                 historyList.innerHTML = '<div class="text-center text-muted" style="padding: var(--space-6);">No documents uploaded yet.</div>';
                 return;

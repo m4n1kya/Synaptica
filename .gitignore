@@ -46,3 +46,6 @@ Thumbs.db
 
 # Synaptica specific data (optional, but good practice to avoid pushing huge PDFs)
 data/*.pdf
+
+# Firebase Admin SDK Secret Key
+backend/firebase-adminsdk.json
