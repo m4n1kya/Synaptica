@@ -10,41 +10,67 @@ from typing import List, Optional
 from models import Fact, Context
 
 
-EXTRACTION_PROMPT = """You are an expert fact extraction system. Analyze the following text from the document "{doc_name}" and extract all meaningful factual claims.
+EXTRACTION_PROMPT = """You are a data extraction assistant. Extract factual information from the following document text.
 
-For each fact, provide:
-1. statement: A clear, standalone factual statement
-2. value: The numerical value as a string (e.g. "7.5") or null if none
-3. unit: The unit of measurement (%, USD Billion, etc.) or null
-4. category: One of [GDP Growth, Inflation, Fiscal Policy, External Sector, Trade, Capital Flows, Monetary Policy, Employment, Financial Sector, Digital Payments, Sectoral Growth, Exchange Rate, Revenue, Profitability, Operations, Network Infrastructure, Workforce, Management, Corporate Information, Corporate History, Capital Markets, Market Position, Balance Sheet, General]
-5. confidence: Your confidence score from 0.0 to 1.0
-6. evidence_text: The exact quote from the text supporting this fact
-7. page_numbers: Array of page numbers (e.g. [1] or [2, 3])
-8. context: Object with time_period, scope, and methodology strings
+For each fact found, output a JSON object with these fields:
+- statement: the factual claim as a clear sentence
+- value: numeric value as string, or null
+- unit: unit of measurement, or null
+- category: one of [Revenue, Profitability, Operations, Workforce, Management, Corporate Information, Corporate History, Capital Markets, Market Position, Balance Sheet, GDP Growth, Inflation, Fiscal Policy, External Sector, Trade, Employment, Financial Sector, Network Infrastructure, General]
+- confidence: number from 0.0 to 1.0
+- evidence_text: exact quote from the text
+- page_numbers: array of integers
+- context: object with time_period, scope, methodology (all strings)
 
-Focus on numerical facts, key events, people, policies, and anything that could be compared across documents.
+Document: {doc_name}
+Pages: {pages}
 
-TEXT FROM PAGES {pages}:
----
+Text:
 {text}
----
 
-Return ONLY a valid JSON array. No markdown, no code fences, no explanation."""
+Output ONLY a JSON array of fact objects. If no facts exist, output [].
+Do not include any explanation or markdown."""
 
 
 def _parse_json(text: str) -> list:
     """Robustly parse JSON, stripping markdown code fences if present."""
     text = text.strip()
-    # Strip ```json ... ``` or ``` ... ```
     text = re.sub(r'^```(?:json)?\s*', '', text, flags=re.MULTILINE)
     text = re.sub(r'\s*```\s*$', '', text, flags=re.MULTILINE)
     text = text.strip()
-    # Find the JSON array boundaries
     start = text.find('[')
     end = text.rfind(']')
     if start != -1 and end != -1 and end > start:
         text = text[start:end+1]
     return json.loads(text)
+
+
+def _safe_response_text(response) -> Optional[str]:
+    """Safely extract text from a Gemini response, handling blocked/empty responses."""
+    try:
+        # Check if candidates exist and have content
+        if not response.candidates:
+            print("  WARNING: No candidates in response (blocked or empty)")
+            return None
+        
+        candidate = response.candidates[0]
+        
+        # Check finish reason
+        finish_reason = str(candidate.finish_reason) if hasattr(candidate, 'finish_reason') else "UNKNOWN"
+        if "SAFETY" in finish_reason or "BLOCK" in finish_reason:
+            print(f"  WARNING: Response blocked by safety filter: {finish_reason}")
+            return None
+        
+        # Try to get text
+        if hasattr(candidate, 'content') and candidate.content and candidate.content.parts:
+            return "".join(p.text for p in candidate.content.parts if hasattr(p, 'text'))
+        
+        # Fallback: try response.text directly
+        return response.text
+        
+    except Exception as e:
+        print(f"  WARNING: Could not extract response text: {e}")
+        return None
 
 
 async def extract_facts_from_chunk(
@@ -67,6 +93,7 @@ async def extract_facts_from_chunk(
     raw_text = ""
     try:
         from google import genai
+        from google.genai import types
 
         client = genai.Client(api_key=api_key)
 
@@ -79,14 +106,23 @@ async def extract_facts_from_chunk(
         response = await client.aio.models.generate_content(
             model="gemini-3.6-flash",
             contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.1,
+                max_output_tokens=8192,
+                safety_settings=[
+                    types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="BLOCK_NONE"),
+                    types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="BLOCK_NONE"),
+                    types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="BLOCK_NONE"),
+                    types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="BLOCK_NONE"),
+                ],
+            )
         )
 
-        raw_text = response.text
-        print(f"  Gemini response: {len(raw_text)} chars")
-
-        if not raw_text or len(raw_text) < 5:
-            print(f"  WARNING: Empty response from Gemini")
+        raw_text = _safe_response_text(response)
+        if not raw_text:
             return []
+        
+        print(f"  Gemini response: {len(raw_text)} chars")
 
         raw_facts = _parse_json(raw_text)
         print(f"  Parsed {len(raw_facts)} facts.")
