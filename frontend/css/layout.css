@@ -437,16 +437,21 @@
 }
 
 .footer-watermark {
-    font-size: 25vw;
+    font-size: 21vw;
     font-weight: 900;
     line-height: 0.75;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.06em;
     color: rgba(255, 255, 255, 0.03);
     text-align: center;
     width: 100%;
     user-select: none;
     pointer-events: none;
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-6);
+    transform: translateY(2vw);
+    
+    /* Fade it as the window is ending */
+    mask-image: linear-gradient(to bottom, black 40%, transparent 95%);
+    -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 95%);
 }
 
 .footer-copyright {
@@ -455,4 +460,6 @@
     letter-spacing: 0.05em;
     text-align: center;
     text-transform: uppercase;
+    position: relative;
+    z-index: 2;
 }
