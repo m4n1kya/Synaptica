@@ -9,6 +9,7 @@ const MatrixView = {
 
     async render() {
         const table = document.getElementById('matrix-table');
+        const container = document.getElementById('matrix-content');
         if (table) {
             table.innerHTML = '<tbody><tr><td colspan="5" class="text-center" style="padding: 60px;"><div class="loading-spinner" style="margin: 0 auto 16px;"></div><div style="color: var(--text-muted);">Waking up AI engine & loading Knowledge Matrix...</div></td></tr></tbody>';
         }
@@ -18,6 +19,25 @@ const MatrixView = {
             this.documents = await StorageManager.getDocuments();
         } catch (e) {
             console.error('Matrix data load failed:', e);
+            return;
+        }
+
+        if (this.documents.length === 0) {
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 16px; opacity: 0.5;">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <h3 style="color: var(--text-primary); margin-bottom: 8px;">No Documents Available</h3>
+                        <p style="max-width: 400px; margin: 0 auto; line-height: 1.5;">Your knowledge matrix is currently empty. Upload a document to begin extracting and linking facts.</p>
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -70,12 +90,13 @@ const MatrixView = {
         html += '</tr></thead><tbody>';
 
         docs.forEach(doc => {
+            const isDemo = doc.isDemo ? `<span style="font-size: 0.65rem; background: rgba(255,165,0,0.15); color: orange; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; border: 1px solid rgba(255,165,0,0.3);">DEMO</span>` : '';
             html += `<tr>`;
             html += `<td class="doc-cell">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:1.2rem;"></span>
                     <div style="flex:1;">
-                        <div style="font-size: 0.8rem; font-weight: 600;">${doc.original_filename || doc.filename}</div>
+                        <div style="font-size: 0.8rem; font-weight: 600;">${doc.original_filename || doc.filename} ${isDemo}</div>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">${doc.fact_count} facts · ${doc.page_count} pages</div>
                     </div>
                     <button class="btn-remove-doc" onclick="MatrixView.deleteDocument('${doc.id}')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; padding: 4px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='var(--color-contradict)'" onmouseout="this.style.color='var(--text-muted)'" title="Remove Document">

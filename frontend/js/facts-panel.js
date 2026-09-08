@@ -10,15 +10,34 @@ const FactsPanel = {
 
     async render() {
         const grid = document.getElementById('facts-grid');
-        if (grid) {
-            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 60px;"><div class="loading-spinner" style="margin: 0 auto 16px;"></div><div style="color: var(--text-muted);">Waking up AI engine & loading Extracted Facts...</div></div>';
-        }
+        if (grid) grid.innerHTML = '<div style="grid-column: 1 / -1; padding: var(--space-4); text-align: center; color: var(--text-muted);">Loading facts...</div>';
 
         try {
             this.facts = await StorageManager.getFacts();
             this.categories = await StorageManager.getCategories();
+            
+            if (this.facts.length === 0) {
+                if (grid) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 16px; opacity: 0.5;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <h3 style="color: var(--text-primary); margin-bottom: 8px;">No Facts Available</h3>
+                            <p style="max-width: 400px; margin: 0 auto; line-height: 1.5;">There are no facts to display. Upload a document to extract knowledge.</p>
+                        </div>
+                    `;
+                }
+                const filterContainer = document.getElementById('facts-filters');
+                if (filterContainer) filterContainer.innerHTML = '';
+                return;
+            }
         } catch (e) {
-            console.error('Facts load failed:', e);
+            console.error('Facts data load failed:', e);
             return;
         }
 
@@ -98,11 +117,16 @@ const FactsPanel = {
             const confPercent = Math.round(fact.confidence * 100);
             const confClass = fact.confidence >= 0.9 ? 'confidence-high'
                 : fact.confidence >= 0.7 ? 'confidence-medium' : 'confidence-low';
+            
+            const isDemo = fact.isDemo ? `<span style="font-size: 0.65rem; background: rgba(255,165,0,0.15); color: orange; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; border: 1px solid rgba(255,165,0,0.3);">DEMO</span>` : '';
 
             return `
                 <div class="fact-card" data-stagger style="animation-delay: ${i * 40}ms;" onclick="FactsPanel.showDetail('${fact.id}')">
                     <div class="fact-header">
-                        <span class="badge badge-category">${fact.category}</span>
+                        <div>
+                            <span class="badge badge-category">${fact.category}</span>
+                            ${isDemo}
+                        </div>
                         <span class="text-xs text-muted font-mono">${confPercent}%</span>
                     </div>
                     ${fact.value ? `<div class="fact-value">${fact.value}<span style="font-size: 0.6em; color: var(--text-muted); margin-left: 4px;">${fact.unit || ''}</span></div>` : ''}

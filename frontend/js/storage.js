@@ -67,7 +67,13 @@ window.StorageManager = {
     async getDocuments() {
         const token = await this.getToken();
         if (token) return await API.getDocuments(token);
-        return await getLocal('documents');
+        
+        // Unauthenticated: Merge Demo Data + Local Data
+        const demoDocs = await API.getDocuments(); // without token -> returns demo
+        const localDocs = await getLocal('documents');
+        demoDocs.forEach(d => d.isDemo = true);
+        localDocs.forEach(d => d.isLocal = true);
+        return [...demoDocs, ...localDocs];
     },
 
     async deleteDocument(docId) {
@@ -76,7 +82,6 @@ window.StorageManager = {
             return await API.deleteDocument(docId, token);
         } else {
             await deleteLocal('documents', docId);
-            // Cleanup local facts
             const facts = await getLocal('facts');
             for (let f of facts) {
                 if (f.source_doc_id === docId) await deleteLocal('facts', f.id);
@@ -89,34 +94,45 @@ window.StorageManager = {
         const token = await this.getToken();
         if (token) return await API.getFacts(category, doc_id, token);
         
-        let facts = await getLocal('facts');
-        if (category) facts = facts.filter(f => f.category === category);
-        if (doc_id) facts = facts.filter(f => f.source_doc_id === doc_id);
-        return facts;
+        // Unauthenticated: Merge Demo Data + Local Data
+        const demoFacts = await API.getFacts(category, doc_id);
+        let localFacts = await getLocal('facts');
+        if (category) localFacts = localFacts.filter(f => f.category === category);
+        if (doc_id) localFacts = localFacts.filter(f => f.source_doc_id === doc_id);
+        
+        demoFacts.forEach(f => f.isDemo = true);
+        return [...demoFacts, ...localFacts];
     },
 
     async getRelationships() {
         const token = await this.getToken();
-        if (token) return await API.getRelationships(token);
+        if (token) return await API.getRelationships(null, token);
         
-        const rels = await getLocal('relationships');
+        const demoRels = await API.getRelationships();
+        const localRels = await getLocal('relationships');
         const facts = await getLocal('facts');
-        const enriched = rels.map(rel => {
+        const enrichedLocal = localRels.map(rel => {
             return {
                 relationship: rel,
                 fact_a: facts.find(f => f.id === rel.fact_a_id) || null,
                 fact_b: facts.find(f => f.id === rel.fact_b_id) || null
             }
         });
-        return enriched;
+        return [...demoRels, ...enrichedLocal];
     },
 
     async getCategories() {
         const token = await this.getToken();
         if (token) return await API.getCategories(token);
 
+        // Fetch demo categories
+        const demoCats = await API.getCategories();
+        
+        // Combine with local facts
         const facts = await getLocal('facts');
         const catMap = {};
+        demoCats.forEach(c => catMap[c.name] = c.count);
+        
         facts.forEach(f => {
             catMap[f.category] = (catMap[f.category] || 0) + 1;
         });
@@ -129,16 +145,23 @@ window.StorageManager = {
         const token = await this.getToken();
         if (token) return await API.getStats(token);
         
+        const demoStats = await API.getStats();
+        const localDocs = await getLocal('documents');
+        const localFacts = await getLocal('facts');
+        const localRels = await getLocal('relationships');
+        
         return {
-            documents: (await getLocal('documents')).length,
-            facts: (await getLocal('facts')).length,
-            relationships: (await getLocal('relationships')).length,
-            cases: 0
+            documents: demoStats.documents + localDocs.length,
+            facts: demoStats.facts + localFacts.length,
+            relationships: demoStats.relationships + localRels.length,
+            cases: demoStats.cases
         };
     },
     
     async getCases() {
-        return [];
+        const token = await this.getToken();
+        if (token) return await API.getCases(token);
+        return await API.getCases();
     },
 
     async uploadPdf(file) {

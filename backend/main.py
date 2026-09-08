@@ -23,6 +23,7 @@ from pdf_processor import extract_pdf_text, chunk_pages
 from fact_extractor import extract_all_facts
 from fact_linker import link_all_facts
 from firestore_store import FirestoreStore
+from knowledge_store import KnowledgeStore
 
 # -- App Setup --------------------------------------------------------------
 
@@ -43,6 +44,9 @@ app.add_middleware(
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Initialize global demo store for unauthenticated users
+demo_store = KnowledgeStore(load_demo=True)
+
 # -- Authentication ---------------------------------------------------------
 
 security = HTTPBearer(auto_error=False)
@@ -58,9 +62,7 @@ def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depen
         print("Token verification failed:", e)
         return None
 
-def require_user(user_id: Optional[str] = Depends(get_current_user)):
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Authentication required")
+def get_optional_user(user_id: Optional[str] = Depends(get_current_user)):
     return user_id
 
 # -- Health & Stats ---------------------------------------------------------
@@ -70,9 +72,9 @@ async def health_check():
     return {"status": "ok", "service": "synaptica", "version": "1.0.0"}
 
 @app.get("/api/stats")
-async def get_stats(user_id: Optional[str] = Depends(get_current_user)):
+async def get_stats(user_id: Optional[str] = Depends(get_optional_user)):
     if not user_id:
-        return {"documents": 0, "facts": 0, "relationships": 0, "cases": 0}
+        return demo_store.get_stats().model_dump()
     store = FirestoreStore(user_id)
     return {
         "documents": len(store.get_all_documents()),
@@ -84,28 +86,38 @@ async def get_stats(user_id: Optional[str] = Depends(get_current_user)):
 # -- Documents --------------------------------------------------------------
 
 @app.get("/api/documents")
-async def list_documents(user_id: str = Depends(require_user)):
-    store = FirestoreStore(user_id)
+async def list_documents(user_id: Optional[str] = Depends(get_optional_user)):
+    store = FirestoreStore(user_id) if user_id else demo_store
     docs = store.get_all_documents()
     return [d.model_dump() for d in docs]
 
 
 @app.get("/api/documents/{doc_id}")
-async def get_document(doc_id: str, user_id: str = Depends(require_user)):
-    store = FirestoreStore(user_id)
-    doc_ref = store.user_ref.collection('documents').document(doc_id).get()
-    if not doc_ref.exists:
-        raise HTTPException(status_code=404, detail="Document not found")
-    
-    facts = store.get_all_facts(doc_id=doc_id)
+async def get_document(doc_id: str, user_id: Optional[str] = Depends(get_optional_user)):
+    if user_id:
+        store = FirestoreStore(user_id)
+        doc_ref = store.user_ref.collection('documents').document(doc_id).get()
+        if not doc_ref.exists:
+            raise HTTPException(status_code=404, detail="Document not found")
+        doc_dict = doc_ref.to_dict()
+        facts = store.get_all_facts(doc_id=doc_id)
+    else:
+        doc = demo_store.documents.get(doc_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+        doc_dict = doc.model_dump()
+        facts = demo_store.get_all_facts(doc_id=doc_id)
+        
     return {
-        "document": doc_ref.to_dict(),
+        "document": doc_dict,
         "facts": [f.model_dump() for f in facts]
     }
 
 
 @app.delete("/api/documents/{doc_id}")
-async def delete_document(doc_id: str, user_id: str = Depends(require_user)):
+async def delete_document(doc_id: str, user_id: Optional[str] = Depends(get_current_user)):
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required to delete")
     store = FirestoreStore(user_id)
     success = store.delete_document(doc_id)
     if not success:
@@ -184,15 +196,15 @@ async def list_facts(
     category: Optional[str] = Query(None),
     doc_id: Optional[str] = Query(None),
     min_confidence: float = Query(0.0),
-    user_id: str = Depends(require_user)
+    user_id: Optional[str] = Depends(get_optional_user)
 ):
-    store = FirestoreStore(user_id)
+    store = FirestoreStore(user_id) if user_id else demo_store
     facts = store.get_all_facts(category=category, doc_id=doc_id, min_confidence=min_confidence)
     return [f.model_dump() for f in facts]
 
 @app.get("/api/categories")
-async def list_categories(user_id: str = Depends(require_user)):
-    store = FirestoreStore(user_id)
+async def list_categories(user_id: Optional[str] = Depends(get_optional_user)):
+    store = FirestoreStore(user_id) if user_id else demo_store
     facts = store.get_all_facts()
     categories = {}
     for f in facts:
@@ -202,10 +214,16 @@ async def list_categories(user_id: str = Depends(require_user)):
 # -- Relationships ----------------------------------------------------------
 
 @app.get("/api/relationships")
-async def list_relationships(user_id: str = Depends(require_user)):
-    store = FirestoreStore(user_id)
+async def list_relationships(user_id: Optional[str] = Depends(get_optional_user)):
+    store = FirestoreStore(user_id) if user_id else demo_store
     rels = store.get_relationships()
-    facts = {f.id: f for f in store.get_all_facts()}
+    
+    # Store API signature is different for demo_store vs FirestoreStore
+    if not user_id:
+        # demo_store has self.facts dictionary
+        facts = demo_store.facts
+    else:
+        facts = {f.id: f for f in store.get_all_facts()}
     
     enriched = []
     for rel in rels:
@@ -219,7 +237,10 @@ async def list_relationships(user_id: str = Depends(require_user)):
     return enriched
 
 @app.get("/api/cases")
-async def get_cases(user_id: str = Depends(require_user)):
+async def get_cases(user_id: Optional[str] = Depends(get_optional_user)):
+    if not user_id:
+        # demo_store returns a list of CaseStudy objects
+        return [c.model_dump() for c in demo_store.cases]
     return []
 
 # -- Static Frontend -------------------------------------------------------
