@@ -44,8 +44,15 @@ Thumbs.db
 *.swp
 *.swo
 
-# Synaptica specific data (optional, but good practice to avoid pushing huge PDFs)
-data/*.pdf
-
-# Firebase Admin SDK Secret Key
+# Synaptica — sensitive & generated files (never commit these)
+data/
+starter-datasets/
 backend/firebase-adminsdk.json
+
+# Debug / temp scripts
+fix_fb.py
+test.pdf
+real_test.pdf
+test_gemini.py
+test_upload.py
+*.test.pdf
