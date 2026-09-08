@@ -117,62 +117,75 @@ const UploadManager = {
         const percentageText = document.getElementById('upload-percentage');
         const steps = ['step-parse', 'step-extract', 'step-link', 'step-done'];
 
-        const stages = [
-            { progress: 25, step: 0, text: 'Parsing PDF structure and extracting text...' },
-            { progress: 55, step: 1, text: 'Extracting atomic facts using AI analysis...' },
-            { progress: 80, step: 2, text: 'Discovering cross-document relationships...' },
-            { progress: 100, step: 3, text: 'Processing complete! Redirecting to results...' },
+        const setProgress = (pct, stepIdx, text) => {
+            if (progressBar) progressBar.style.width = pct + '%';
+            if (percentageText) percentageText.textContent = pct + '%';
+            if (statusText) statusText.textContent = text;
+            steps.forEach((s, i) => {
+                const el = document.getElementById(s);
+                if (el) {
+                    if (i < stepIdx) el.className = 'progress-step done';
+                    else if (i === stepIdx) el.className = 'progress-step active';
+                    else el.className = 'progress-step';
+                }
+            });
+        };
+
+        // Stage 1: Start upload
+        setProgress(5, 0, `Uploading ${files[0].name} to server...`);
+
+        // Animate progress while real upload runs concurrently
+        const uploadPromise = StorageManager.uploadPdf(files[0]);
+
+        // Fake progress ticker that advances during real upload
+        const ticker = [
+            { delay: 1500,  pct: 15, step: 0, text: 'Parsing PDF structure and extracting text...' },
+            { delay: 4000,  pct: 30, step: 1, text: 'Sending to AI for fact extraction...' },
+            { delay: 8000,  pct: 45, step: 1, text: 'Extracting atomic facts using Gemini AI...' },
+            { delay: 20000, pct: 60, step: 1, text: 'Processing document chunks...' },
+            { delay: 40000, pct: 72, step: 2, text: 'Discovering cross-document relationships...' },
+            { delay: 60000, pct: 82, step: 2, text: 'Almost done — finalising knowledge graph...' },
         ];
 
-        // Try real upload for first file
-        let uploaded = false;
+        let done = false;
+        uploadPromise.finally(() => { done = true; });
+
+        for (const t of ticker) {
+            await new Promise(r => setTimeout(r, t.delay - (ticker.indexOf(t) > 0 ? ticker[ticker.indexOf(t)-1].delay : 0)));
+            if (done) break;
+            setProgress(t.pct, t.step, t.text);
+        }
+
+        // Await the real result
+        let result;
         try {
-            statusText.textContent = `Uploading ${files[0].name}...`;
-            if (progressBar) progressBar.style.width = '10%';
-            if (percentageText) percentageText.textContent = '10%';
-            const result = await StorageManager.uploadPdf(files[0]);
-            uploaded = true;
-            
-            if (result.fact_count === 0 || (result.facts && result.facts.length === 0)) {
-                Animations.showToast(`Warning: 0 facts extracted. Verify Gemini API Key on backend!`, 'error');
-            } else {
-                Animations.showToast(`Uploaded ${result.filename} — ${result.fact_count || result.facts?.length || 0} facts extracted`, 'success');
-            }
-            this.loadHistory(); // Refresh history list
+            result = await uploadPromise;
         } catch (e) {
             console.error('Upload failed:', e);
             Animations.showToast('Upload failed: ' + e.message, 'error');
-            statusText.textContent = 'Upload Failed.';
+            if (statusText) statusText.textContent = 'Upload Failed.';
             if (progressBar) progressBar.style.backgroundColor = 'var(--color-contradict)';
             return;
         }
 
-        for (const stage of stages) {
-            await new Promise(r => setTimeout(r, 800));
-            if (progressBar) progressBar.style.width = stage.progress + '%';
-            if (percentageText) percentageText.textContent = stage.progress + '%';
-            statusText.textContent = stage.text;
+        // Complete!
+        setProgress(100, 3, 'Processing complete!');
+        this.loadHistory();
 
-            // Update step indicators
-            steps.forEach((s, i) => {
-                const el = document.getElementById(s);
-                if (el) {
-                    if (i < stage.step) el.className = 'progress-step done';
-                    else if (i === stage.step) el.className = 'progress-step active';
-                    else el.className = 'progress-step';
-                }
-            });
+        const factCount = result.fact_count || result.facts?.length || 0;
+        if (factCount === 0) {
+            Animations.showToast(`Uploaded — but 0 facts extracted. Try a text-based PDF.`, 'error');
+        } else {
+            Animations.showToast(`✓ ${result.filename || files[0].name} — ${factCount} facts extracted!`, 'success');
         }
 
-        // Redirect to matrix view after completion
         await new Promise(r => setTimeout(r, 1200));
         window.location.hash = '#/matrix';
-        // Force re-render so new document immediately appears
         setTimeout(() => {
             if (window.MatrixView) MatrixView.render();
         }, 200);
-        Animations.showToast('Documents processed successfully!', 'success');
         // Reset queue
+
         this.queuedFiles = [];
         this.renderQueue();
     },
