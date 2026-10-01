@@ -145,20 +145,27 @@
   z-index: 2;
 }
 
-.hero .scroll-to {
+.scroll-indicator {
   position: absolute;
-  bottom: 2.22vw;
-  left: 53.82vw;
-  width: 10.27vw;
-  text-transform: uppercase;
-  display: flex;
-  flex-direction: column;
+  bottom: 2vw;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-secondary);
+  animation: scrollBounce 2s infinite;
   z-index: 2;
+  opacity: 0.7;
 }
 
-.hero .scroll-to__row {
-  overflow: hidden;
-  display: flex;
+@keyframes scrollBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  40% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+  60% {
+    transform: translateX(-50%) translateY(-5px);
+  }
 }
 
 .hero .book-btn {
