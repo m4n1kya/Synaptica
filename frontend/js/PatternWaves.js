@@ -1,4 +1,4 @@
-import { Renderer, Program, Mesh, Triangle, RenderTarget, Texture } from 'https://cdn.jsdelivr.net/npm/ogl@1.0.10/dist/ogl.mjs';
+import { Renderer, Program, Mesh, Triangle, RenderTarget, Texture } from 'https://esm.sh/ogl';
 
 const SURFACE_PRESETS = {
   silk: { pattern: 'dot', wave: 'silk', spacing: 9, markSize: 0.95, depth: 0.95, light: 0, shine: 0.8, contrast: 1.2, speed: 0.35, scale: 1, direction: 20 },
