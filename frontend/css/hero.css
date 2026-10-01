@@ -30,7 +30,7 @@
 .hero .title-h1 {
   font-size: var(--font-size-h1);
   line-height: var(--line-height-h1);
-  font-weight: 800; /* Made slightly heavier for sans-serif */
+  font-weight: 700; /* Reduced from 800 */
   color: var(--text-primary);
   font-family: var(--main-font);
   letter-spacing: -0.02em;
