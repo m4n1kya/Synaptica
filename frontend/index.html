@@ -51,10 +51,8 @@
         <!-- ═══ Landing View ═══ -->
         <div id="landing-view" class="view-container active">
             <section class="hero">
-                <video class="hero-video" autoplay muted loop>
-                    <source src="https://cdn.zajno.com/dev/codepen/fossil/fossil.mp4" type="video/mp4"/>
-                </video>
-                <div class="hero-overlay"></div>
+                <div id="pattern-waves-container" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;"></div>
+                <div class="hero-overlay" style="z-index: -1;"></div>
                 
                 <div class="hero-container">
                     <div class="title-block">
@@ -426,5 +424,21 @@
     <script src="/js/graph-view.js?v=2"></script>
     <script src="/js/analytics-view.js?v=2"></script>
     <script src="/js/app.js?v=2"></script>
+
+    <script type="module">
+        import PatternWaves from '/js/PatternWaves.js';
+        const container = document.getElementById('pattern-waves-container');
+        if (container) {
+            new PatternWaves(container, {
+                preset: 'silk',
+                color: '#ffffff',
+                backgroundColor: '#000000',
+                fade: 'edges',
+                interactive: true,
+                cursorSize: 50,
+                cursorStrength: 0.6
+            });
+        }
+    </script>
 </body>
 </html>

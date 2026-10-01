@@ -3,21 +3,21 @@
    ══════════════════════════════════════════════════════════════ */
 
 .hero {
-  --font-size-h1: 8.32vw;
+  --font-size-h1: 6vw; /* Reduced from 8.32vw */
   --font-size-desc-1: 1.11vw;
   --font-size-desc-2: 1.11vw;
   --font-size-header-text-1: 0.97vw;
   --font-size-btn-1: 1.25vw;
   --font-size-btn-2: 1.25vw;
   
-  --line-height-h1: 7.43vw;
+  --line-height-h1: 6vw; /* Reduced from 7.43vw */
   --line-height-desc-1: 1.11vw;
   --line-height-desc-2: 1.11vw;
   --line-height-header-text-1: 0.97vw;
   --line-height-btn-1: 1.25vw;
   --line-height-btn-2: 1.25vw;
   
-  --main-font: "Reforma 1918", "Playfair Display", serif;
+  --main-font: "Inter", sans-serif; /* Changed from Reforma 1918/Playfair */
   --sub-font: "Poppins", sans-serif;
   
   width: 100vw;
@@ -30,9 +30,10 @@
 .hero .title-h1 {
   font-size: var(--font-size-h1);
   line-height: var(--line-height-h1);
-  font-weight: 700;
+  font-weight: 800; /* Made slightly heavier for sans-serif */
   color: var(--text-primary);
   font-family: var(--main-font);
+  letter-spacing: -0.02em;
 }
 
 .hero .desc-1 {
