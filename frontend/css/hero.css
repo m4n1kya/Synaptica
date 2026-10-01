@@ -72,6 +72,7 @@
 .hero .hero-container {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   margin: 0 auto;
@@ -80,7 +81,10 @@
 }
 
 .hero .title-block {
-  padding-left: 10.27vw;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   position: relative;
   z-index: 2;
 }
@@ -97,6 +101,7 @@
 
 .hero .title-h1 .title-row {
   display: flex;
+  justify-content: center;
 }
 
 .hero .title-h1 .title-charts-cont {
@@ -105,7 +110,7 @@
 }
 
 .hero .title-h1 .title-row-2 {
-  padding-left: 5.76vw;
+  padding-left: 0;
 }
 
 .hero .title-h1 #ry {
@@ -121,17 +126,15 @@
 }
 
 .hero .first-desc {
-  position: absolute;
-  top: -3.47vw;
-  right: 25.69vw;
+  position: relative;
+  margin-bottom: 2vw;
   overflow: hidden;
   display: flex;
 }
 
 .hero .second-desc {
-  position: absolute;
-  bottom: -6.94vw;
-  left: 33.68vw;
+  position: relative;
+  margin-top: 2vw;
   overflow: hidden;
   display: flex;
 }
