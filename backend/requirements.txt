@@ -1,8 +1,17 @@
+# Async Web Framework
 fastapi==0.115.0
 uvicorn[standard]==0.30.0
 python-multipart==0.0.9
+
+# Data Validation
 pydantic==2.9.0
+
+# Document Parsing
 pypdf==5.0.1
-google-genai==1.10.0
 aiofiles==24.1.0
+
+# AI Services
+google-genai==1.10.0
+
+# Database
 firebase-admin==6.5.0
