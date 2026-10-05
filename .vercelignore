@@ -1,0 +1,9 @@
+backend/
+starter-datasets/
+*.py
+*.pyc
+requirements.txt
+tests/
+.pytest_cache/
+.coverage
+.tox/
