@@ -14,7 +14,13 @@ const API = {
             fetch(`${this.baseUrl}/api/documents`).catch(() => {});
         } catch (e) {}
     },
-
+    /**
+     * Helper to wrap fetch calls with auth and standard error handling.
+     * @param {string} endpoint - The API endpoint to call.
+     * @param {Object} options - Standard fetch options.
+     * @param {string|null} token - Optional Firebase auth token.
+     * @returns {Promise<any>} The parsed JSON response.
+     */
     async request(endpoint, options = {}, token = null) {
         try {
             const url = `${this.baseUrl}${endpoint}`;
