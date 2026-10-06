@@ -38,11 +38,15 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# IDEs
+# IDEs & Tools
 .vscode/
 .idea/
 *.swp
 *.swo
+.vercel/
+.next/
+out/
+build/
 
 # Synaptica — sensitive & generated files (never commit these)
 data/
