@@ -1,10 +1,11 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Distribution / packaging
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -22,41 +23,32 @@ share/python-wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Virtual environments & environment variables
 venv/
 .venv/
 env/
 .env
+!.env.example
 
-# Node
+# Node & frontend tooling
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.vercel/
 
-# OS Files
+# OS & Editor files
 .DS_Store
 Thumbs.db
-
-# IDEs & Tools
 .vscode/
 .idea/
 *.swp
 *.swo
-.vercel/
-.next/
-out/
-build/
 
-# Synaptica — sensitive & generated files (never commit these)
+# Application runtime data & local credentials
 data/
 starter-datasets/
 backend/firebase-adminsdk.json
-
-# Debug / temp scripts
-fix_fb.py
-test.pdf
-real_test.pdf
-test_gemini.py
-test_upload.py
-*.test.pdf
+*.pdf
+fix_*.py
+test_*.py

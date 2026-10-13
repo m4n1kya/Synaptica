@@ -1,13 +1,28 @@
-# Backend API
+# Synaptica — Backend Service
 
-Synaptica's backend is a high-performance FastAPI service designed for asynchronous extraction of knowledge graphs from complex PDFs.
+Asynchronous **FastAPI** service powering PDF ingestion, LLM-driven atomic fact extraction, cross-document relationship reconciliation, and multi-tenant persistence.
 
-## Stack
-- **FastAPI**: Async HTTP handling and routing
-- **Uvicorn**: ASGI web server
-- **PyMuPDF**: PDF text extraction
-- **Google Gemini 3.6 Flash**: LLM for structured fact extraction
-- **Firebase Firestore**: Persistent storage for extracted knowledge bases
+## Module Structure
 
-## Rate Limiting
-To comply with Gemini's free-tier rate limits, chunks are processed in smaller batches (max 6) sequentially rather than concurrently. This prevents `429 RESOURCE_EXHAUSTED` and `503 UNAVAILABLE` errors on large PDFs.
+```text
+backend/
+├── main.py              # FastAPI application, CORS, auth middleware, REST endpoints
+├── models.py            # Pydantic v2 schemas (Document, Fact, Context, Relationship, CaseStudy)
+├── pdf_processor.py     # Multi-page PDF parsing and overlapping sliding-window chunker
+├── fact_extractor.py    # Gemini AI extraction pipeline with exponential backoff & JSON recovery
+├── fact_linker.py       # Pairwise candidate filtering and LLM relationship classification
+├── firestore_store.py   # Multi-tenant Google Cloud Firestore persistence layer
+├── knowledge_store.py   # In-memory store for fallback & static dataset generation
+├── demo_data.py         # Pre-verified macroeconomic & corporate financial datasets
+└── requirements.txt     # Pinned production dependencies
+```
+
+## Running Locally
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+Interactive OpenAPI documentation is automatically served at `http://localhost:8000/docs`.
