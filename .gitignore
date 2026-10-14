@@ -50,5 +50,7 @@ data/
 starter-datasets/
 backend/firebase-adminsdk.json
 *.pdf
-fix_*.py
-test_*.py
+/fix_*.py
+/test_*.py
+!backend/tests/
+!backend/tests/**
