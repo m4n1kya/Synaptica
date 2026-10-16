@@ -105,6 +105,12 @@ class KnowledgeStore:
             rels = [r for r in rels if r.relationship_type == rel_type]
         return rels
 
+    def get_relationships(self, min_confidence: float = 0.0) -> List[Relationship]:
+        rels = list(self.relationships.values())
+        if min_confidence > 0:
+            rels = [r for r in rels if r.confidence >= min_confidence]
+        return rels
+
     def get_fact_with_relationships(self, fact_id: str) -> Optional[dict]:
         fact = self.facts.get(fact_id)
         if not fact:
