@@ -4,7 +4,7 @@ uvicorn[standard]==0.30.0
 python-multipart==0.0.9
 
 # Data Validation
-pydantic==2.9.0
+pydantic==2.14.1
 
 # Document Parsing
 pypdf==5.0.1
