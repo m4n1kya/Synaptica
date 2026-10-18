@@ -17,12 +17,14 @@ frontend/
 │   ├── layout.css          # Grid systems, navigation, responsive shells
 │   ├── components.css      # Cards, badges, tables, modals, toast notifications
 │   ├── hero.css            # Hero typography & viewport layout
+│   ├── LightRays.css       # Fullscreen WebGL2 light rays canvas styling
 │   └── animations.css      # Keyframes and transition utilities
 └── js/
     ├── app.js              # Hash-based router, view lifecycle, auth controller
     ├── api.js              # REST API client with automatic Bearer token injection
     ├── storage.js          # Hybrid storage layer (Cloud Firestore + local IndexedDB + static demo)
-    ├── PatternWaves.js     # Interactive WebGL2 shader surface (OGL)
+    ├── LightRays.js        # Interactive WebGL2 volumetric light rays shader
+    ├── PatternWaves.js     # Interactive WebGL2 wave surface component
     ├── animations.js       # GSAP timelines, counter animations, toast manager
     ├── upload.js           # Drag-and-drop PDF ingestion & real-time progress ticker
     ├── matrix-view.js      # Cross-document Source × Category pivot matrix

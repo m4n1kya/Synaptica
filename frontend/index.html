@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/animations.css">
     <link rel="stylesheet" href="/css/hero.css">
+    <link rel="stylesheet" href="/css/LightRays.css">
 
     <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -51,8 +52,8 @@
         <!-- ═══ Landing View ═══ -->
         <div id="landing-view" class="view-container active">
             <section class="hero">
-                <div id="pattern-waves-container" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;"></div>
                 <div class="hero-overlay" style="z-index: -1;"></div>
+                <div id="light-rays-container" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none;"></div>
                 
                 <div class="hero-container">
                     <div class="title-block">
@@ -415,17 +416,19 @@
     <script src="/js/app.js?v=2"></script>
 
     <script type="module">
-        import PatternWaves from '/js/PatternWaves.js';
-        const container = document.getElementById('pattern-waves-container');
+        import LightRays from '/js/LightRays.js';
+        const container = document.getElementById('light-rays-container');
         if (container) {
-            new PatternWaves(container, {
-                preset: 'silk',
-                color: '#ffffff',
-                backgroundColor: '#000000',
-                fade: 'edges',
-                interactive: true,
-                cursorSize: 50,
-                cursorStrength: 0.6
+            new LightRays(container, {
+                raysOrigin: 'top-center',
+                raysColor: '#ffffff',
+                raysSpeed: 1,
+                lightSpread: 0.5,
+                rayLength: 3,
+                glow: 0.6,
+                haze: 0.25,
+                followMouse: true,
+                mouseInfluence: 0.1
             });
         }
     </script>
