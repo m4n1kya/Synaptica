@@ -6,7 +6,7 @@ import os
 import sys
 import uuid
 import shutil
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, UploadFile, File, Query, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -68,7 +68,8 @@ def get_optional_user(user_id: Optional[str] = Depends(get_current_user)):
 # -- Health & Stats ---------------------------------------------------------
 
 @app.get("/api/health")
-async def health_check():
+async def health_check() -> Dict[str, str]:
+    """Service health check returning service status and version."""
     return {"status": "ok", "service": "synaptica", "version": "1.0.0"}
 
 @app.get("/api/debug/env")
@@ -101,7 +102,8 @@ async def debug_gemini():
         return {"error": type(e).__name__, "detail": str(e)}
 
 @app.get("/api/stats")
-async def get_stats(user_id: Optional[str] = Depends(get_optional_user)):
+async def get_stats(user_id: Optional[str] = Depends(get_optional_user)) -> Dict[str, Any]:
+    """Retrieve aggregate knowledge layer metrics across documents, facts, and relationships."""
     if not user_id:
         return demo_store.get_stats().model_dump()
     store = FirestoreStore(user_id)
@@ -115,14 +117,16 @@ async def get_stats(user_id: Optional[str] = Depends(get_optional_user)):
 # -- Documents --------------------------------------------------------------
 
 @app.get("/api/documents")
-async def list_documents(user_id: Optional[str] = Depends(get_optional_user)):
+async def list_documents(user_id: Optional[str] = Depends(get_optional_user)) -> List[Dict[str, Any]]:
+    """List all ingested documents in the active workspace."""
     store = FirestoreStore(user_id) if user_id else demo_store
     docs = store.get_all_documents()
     return [d.model_dump() for d in docs]
 
 
 @app.get("/api/documents/{doc_id}")
-async def get_document(doc_id: str, user_id: Optional[str] = Depends(get_optional_user)):
+async def get_document(doc_id: str, user_id: Optional[str] = Depends(get_optional_user)) -> Dict[str, Any]:
+    """Retrieve detailed document metadata and its associated extracted facts."""
     if user_id:
         store = FirestoreStore(user_id)
         doc_ref = store.user_ref.collection('documents').document(doc_id).get()
@@ -144,7 +148,8 @@ async def get_document(doc_id: str, user_id: Optional[str] = Depends(get_optiona
 
 
 @app.delete("/api/documents/{doc_id}")
-async def delete_document(doc_id: str, user_id: Optional[str] = Depends(get_current_user)):
+async def delete_document(doc_id: str, user_id: Optional[str] = Depends(get_current_user)) -> Dict[str, str]:
+    """Delete a document and cascade remove all its linked facts and relationships."""
     if not user_id:
         raise HTTPException(status_code=401, detail="Authentication required to delete")
     store = FirestoreStore(user_id)
@@ -240,13 +245,15 @@ async def list_facts(
     doc_id: Optional[str] = Query(None),
     min_confidence: float = Query(0.0),
     user_id: Optional[str] = Depends(get_optional_user)
-):
+) -> List[Dict[str, Any]]:
+    """Query extracted facts with optional filters for category, source document, and confidence."""
     store = FirestoreStore(user_id) if user_id else demo_store
     facts = store.get_all_facts(category=category, doc_id=doc_id, min_confidence=min_confidence)
     return [f.model_dump() for f in facts]
 
 @app.get("/api/categories")
-async def list_categories(user_id: Optional[str] = Depends(get_optional_user)):
+async def list_categories(user_id: Optional[str] = Depends(get_optional_user)) -> List[Dict[str, Any]]:
+    """Retrieve fact distribution count grouped by category."""
     store = FirestoreStore(user_id) if user_id else demo_store
     facts = store.get_all_facts()
     categories = {}
@@ -257,7 +264,8 @@ async def list_categories(user_id: Optional[str] = Depends(get_optional_user)):
 # -- Relationships ----------------------------------------------------------
 
 @app.get("/api/relationships")
-async def list_relationships(user_id: Optional[str] = Depends(get_optional_user)):
+async def list_relationships(user_id: Optional[str] = Depends(get_optional_user)) -> List[Dict[str, Any]]:
+    """Retrieve cross-document relationships enriched with source and target facts."""
     store = FirestoreStore(user_id) if user_id else demo_store
     rels = store.get_relationships()
     
@@ -280,7 +288,8 @@ async def list_relationships(user_id: Optional[str] = Depends(get_optional_user)
     return enriched
 
 @app.get("/api/cases")
-async def get_cases(user_id: Optional[str] = Depends(get_optional_user)):
+async def get_cases(user_id: Optional[str] = Depends(get_optional_user)) -> List[Dict[str, Any]]:
+    """Retrieve pre-verified benchmark case studies demonstrating cross-document reconciliation."""
     if not user_id:
         # demo_store returns a list of CaseStudy objects
         return [c.model_dump() for c in demo_store.cases]
@@ -292,6 +301,7 @@ FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 
 @app.get("/")
 async def serve_root():
+    """Serve the single-page application shell."""
     index_path = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
