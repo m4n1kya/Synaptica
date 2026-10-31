@@ -69,3 +69,52 @@ def test_relationships_endpoint():
     assert response.status_code == 200
     rels = response.json()
     assert isinstance(rels, list)
+
+
+def test_categories_endpoint():
+    """Verify /api/categories returns category names and fact distribution counts."""
+    response = client.get("/api/categories")
+    assert response.status_code == 200
+    categories = response.json()
+    assert isinstance(categories, list)
+    assert len(categories) > 0
+    first = categories[0]
+    assert "name" in first
+    assert "count" in first
+    assert first["count"] >= 1
+
+
+def test_get_document_detail_success():
+    """Verify /api/documents/{doc_id} retrieves document metadata and extracted facts."""
+    response = client.get("/api/documents/doc-eco-survey")
+    assert response.status_code == 200
+    data = response.json()
+    assert "document" in data
+    assert "facts" in data
+    assert data["document"]["id"] == "doc-eco-survey"
+    assert isinstance(data["facts"], list)
+    assert len(data["facts"]) > 0
+
+
+def test_get_document_detail_not_found():
+    """Verify /api/documents/{doc_id} returns 404 for an invalid doc_id."""
+    response = client.get("/api/documents/non_existent_doc_12345")
+    assert response.status_code == 404
+    data = response.json()
+    assert data.get("detail") == "Document not found"
+
+
+def test_delete_document_unauthorized():
+    """Verify /api/documents/{doc_id} rejects deletion when unauthenticated."""
+    response = client.delete("/api/documents/doc-eco-survey")
+    assert response.status_code == 401
+    assert "Authentication required" in response.json().get("detail", "")
+
+
+def test_upload_invalid_file_extension():
+    """Verify /api/upload rejects non-PDF file uploads with 400 Bad Request."""
+    files = {"file": ("notes.txt", b"plain text content", "text/plain")}
+    response = client.post("/api/upload", files=files)
+    assert response.status_code == 400
+    assert "Only PDF files are accepted" in response.json().get("detail", "")
+
