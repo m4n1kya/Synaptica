@@ -25,15 +25,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt flake8 pytest httpx
+          pip install -r backend/requirements.txt flake8 pytest httpx pytest-cov
 
       - name: Run flake8 syntax & runtime checks
         run: |
           flake8 backend --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 backend --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Run automated unit tests
+      - name: Run automated unit tests with coverage
         env:
           PYTHONPATH: backend
         run: |
-          pytest backend/tests -v
+          pytest backend/tests -v --cov=backend --cov-report=term-missing
