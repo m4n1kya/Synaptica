@@ -2,7 +2,7 @@
 Unit tests for Synaptica fact linking and candidate pair generation logic.
 """
 from models import Fact
-from fact_linker import find_candidate_pairs
+from fact_linker import find_candidate_pairs, find_candidate_pairs_incremental
 
 
 def test_find_candidate_pairs_same_category():
@@ -111,3 +111,56 @@ def test_find_candidate_pairs_no_duplicates():
 def test_find_candidate_pairs_empty():
     """Verify empty input returns empty list."""
     assert find_candidate_pairs([]) == []
+
+
+def test_find_candidate_pairs_incremental_matching_category():
+    """Verify incremental linking pairs new facts with existing facts in the same category."""
+    new_fact = Fact(id="nf1", statement="New revenue data", category="Revenue", source_doc_id="doc_new")
+    existing_fact1 = Fact(id="ef1", statement="Past revenue data", category="Revenue", source_doc_id="doc_old")
+    existing_fact2 = Fact(id="ef2", statement="Inflation rate", category="Inflation", source_doc_id="doc_old")
+
+    pairs = find_candidate_pairs_incremental([new_fact], [existing_fact1, existing_fact2])
+    assert len(pairs) == 1
+    assert pairs[0] == (new_fact, existing_fact1)
+
+
+def test_find_candidate_pairs_incremental_matching_value():
+    """Verify incremental linking pairs new facts with existing facts sharing value & unit."""
+    new_fact = Fact(
+        id="nf1",
+        statement="New company metric",
+        value="12.5",
+        unit="%",
+        category="Operations",
+        source_doc_id="doc_new",
+    )
+    existing_fact = Fact(
+        id="ef1",
+        statement="Prior metric",
+        value="12.5",
+        unit="%",
+        category="Profitability",
+        source_doc_id="doc_old",
+    )
+
+    pairs = find_candidate_pairs_incremental([new_fact], [existing_fact])
+    assert len(pairs) == 1
+    assert pairs[0] == (new_fact, existing_fact)
+
+
+def test_find_candidate_pairs_incremental_same_doc_excluded():
+    """Verify incremental linking ignores facts originating from the same document."""
+    new_fact = Fact(id="nf1", statement="Claim A", category="Trade", source_doc_id="doc_shared")
+    existing_fact = Fact(id="ef1", statement="Claim B", category="Trade", source_doc_id="doc_shared")
+
+    pairs = find_candidate_pairs_incremental([new_fact], [existing_fact])
+    assert len(pairs) == 0
+
+
+def test_find_candidate_pairs_incremental_empty_inputs():
+    """Verify incremental pairing returns empty list when either input is empty."""
+    fact = Fact(id="f1", statement="Claim", category="Trade", source_doc_id="doc_1")
+    assert find_candidate_pairs_incremental([], [fact]) == []
+    assert find_candidate_pairs_incremental([fact], []) == []
+    assert find_candidate_pairs_incremental([], []) == []
+
