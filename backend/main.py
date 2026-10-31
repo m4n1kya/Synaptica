@@ -241,14 +241,24 @@ async def upload_pdf(file: UploadFile = File(...), user_id: Optional[str] = Depe
 
 @app.get("/api/facts")
 async def list_facts(
-    category: Optional[str] = Query(None),
-    doc_id: Optional[str] = Query(None),
-    min_confidence: float = Query(0.0),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    doc_id: Optional[str] = Query(None, description="Filter by source document ID"),
+    min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score"),
+    search: Optional[str] = Query(None, description="Case-insensitive text search"),
+    limit: Optional[int] = Query(None, ge=1, le=500, description="Max results limit"),
+    offset: int = Query(0, ge=0, description="Number of items to skip"),
     user_id: Optional[str] = Depends(get_optional_user)
 ) -> List[Dict[str, Any]]:
-    """Query extracted facts with optional filters for category, source document, and confidence."""
+    """Query extracted facts with optional filters for category, document, search text, and pagination."""
     store = FirestoreStore(user_id) if user_id else demo_store
     facts = store.get_all_facts(category=category, doc_id=doc_id, min_confidence=min_confidence)
+    if search:
+        s_lower = search.lower()
+        facts = [f for f in facts if s_lower in f.statement.lower() or s_lower in f.evidence_text.lower()]
+    if offset > 0:
+        facts = facts[offset:]
+    if limit is not None:
+        facts = facts[:limit]
     return [f.model_dump() for f in facts]
 
 @app.get("/api/categories")
@@ -264,10 +274,18 @@ async def list_categories(user_id: Optional[str] = Depends(get_optional_user)) -
 # -- Relationships ----------------------------------------------------------
 
 @app.get("/api/relationships")
-async def list_relationships(user_id: Optional[str] = Depends(get_optional_user)) -> List[Dict[str, Any]]:
-    """Retrieve cross-document relationships enriched with source and target facts."""
+async def list_relationships(
+    relationship_type: Optional[str] = Query(None, description="Filter by relationship type (corroborates, contradicts, contextual_difference)"),
+    min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score"),
+    limit: Optional[int] = Query(None, ge=1, le=500, description="Max results limit"),
+    offset: int = Query(0, ge=0, description="Number of items to skip"),
+    user_id: Optional[str] = Depends(get_optional_user)
+) -> List[Dict[str, Any]]:
+    """Retrieve cross-document relationships enriched with source and target facts, with optional filtering and pagination."""
     store = FirestoreStore(user_id) if user_id else demo_store
-    rels = store.get_relationships()
+    rels = store.get_relationships(min_confidence=min_confidence)
+    if relationship_type:
+        rels = [r for r in rels if r.relationship_type.lower() == relationship_type.lower()]
     
     # Store API signature is different for demo_store vs FirestoreStore
     if not user_id:
@@ -276,6 +294,11 @@ async def list_relationships(user_id: Optional[str] = Depends(get_optional_user)
     else:
         facts = {f.id: f for f in store.get_all_facts()}
     
+    if offset > 0:
+        rels = rels[offset:]
+    if limit is not None:
+        rels = rels[:limit]
+
     enriched = []
     for rel in rels:
         fact_a = facts.get(rel.fact_a_id)

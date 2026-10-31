@@ -118,3 +118,45 @@ def test_upload_invalid_file_extension():
     assert response.status_code == 400
     assert "Only PDF files are accepted" in response.json().get("detail", "")
 
+
+def test_facts_pagination_limit_and_offset():
+    """Verify /api/facts respects limit and offset query parameters."""
+    res_all = client.get("/api/facts")
+    assert res_all.status_code == 200
+    all_facts = res_all.json()
+    assert len(all_facts) >= 5
+
+    res_limited = client.get("/api/facts?limit=3")
+    assert res_limited.status_code == 200
+    limited_facts = res_limited.json()
+    assert len(limited_facts) == 3
+    assert limited_facts == all_facts[:3]
+
+    res_offset = client.get("/api/facts?limit=2&offset=2")
+    assert res_offset.status_code == 200
+    offset_facts = res_offset.json()
+    assert len(offset_facts) == 2
+    assert offset_facts == all_facts[2:4]
+
+
+def test_facts_text_search():
+    """Verify /api/facts performs case-insensitive text search across statements."""
+    response = client.get("/api/facts?search=gdp")
+    assert response.status_code == 200
+    matching_facts = response.json()
+    assert len(matching_facts) > 0
+    for fact in matching_facts:
+        searchable = f"{fact['statement']} {fact['evidence_text']}".lower()
+        assert "gdp" in searchable
+
+
+def test_relationships_filtered_by_type():
+    """Verify /api/relationships filters by relationship_type."""
+    res_corroborates = client.get("/api/relationships?relationship_type=corroborates")
+    assert res_corroborates.status_code == 200
+    corroborates = res_corroborates.json()
+    assert len(corroborates) > 0
+    for item in corroborates:
+        assert item["relationship"]["relationship_type"] == "corroborates"
+
+
