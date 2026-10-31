@@ -172,6 +172,14 @@ FastAPI serves both the REST API and the static frontend locally:
 - **Application UI**: `http://localhost:8000`
 - **Interactive Swagger Docs**: `http://localhost:8000/docs`
 
+### 4. Running Automated Tests & Coverage
+
+Execute the automated test suite across all API contracts, Pydantic models, and ML pipelines:
+
+```bash
+pytest backend/tests -v --cov=backend --cov-report=term-missing
+```
+
 ---
 
 ## API Reference
@@ -181,13 +189,13 @@ FastAPI serves both the REST API and the static frontend locally:
 | `GET` | `/api/health` | Public | Service health check and runtime status |
 | `GET` | `/api/stats` | Optional | Aggregated counts of documents, facts, categories, and relationships |
 | `GET` | `/api/documents` | Optional | List all ingested documents (returns demo dataset if unauthenticated) |
-| `POST` | `/api/upload` | Optional | Upload a PDF, extract atomic facts via Gemini, and compute relationships |
+| `GET` | `/api/documents/{doc_id}` | Optional | Retrieve detailed document metadata and extracted atomic facts |
 | `DELETE` | `/api/documents/{doc_id}` | Required | Delete a document and cascade-remove its facts and relationships |
-| `GET` | `/api/facts` | Optional | Query extracted facts with optional `doc_id`, `category`, and `search` filters |
-| `GET` | `/api/relationships` | Optional | Query cross-document relationships filtered by `relationship_type` |
+| `POST` | `/api/upload` | Optional | Upload a PDF, extract atomic facts via Gemini, and compute relationships |
+| `GET` | `/api/facts` | Optional | Query facts with optional `category`, `doc_id`, `min_confidence`, `search`, `limit`, and `offset` |
+| `GET` | `/api/categories` | Optional | Retrieve fact distribution counts grouped by category |
+| `GET` | `/api/relationships` | Optional | Query cross-document relationships with optional `relationship_type`, `limit`, and `offset` |
 | `GET` | `/api/cases` | Optional | Retrieve curated analytical case studies (Corroboration, Contradiction, etc.) |
-| `GET` | `/api/graph` | Optional | Retrieve nodes and edges formatted for the force-directed knowledge graph |
-| `POST` | `/api/analyze` | Optional | Trigger a full cross-document re-linking pass across the active workspace |
 
 ---
 
