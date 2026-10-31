@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt flake8 pytest httpx pytest-cov
+          pip install -r backend/requirements.txt flake8 pytest httpx pytest-cov pytest-asyncio
 
       - name: Run flake8 syntax & runtime checks
         run: |

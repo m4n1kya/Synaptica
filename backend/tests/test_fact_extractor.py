@@ -1,6 +1,7 @@
 """
 Unit tests for Synaptica LLM fact extraction parsing and safety utilities.
 """
+import asyncio
 import json
 import pytest
 from unittest.mock import MagicMock, patch
@@ -88,15 +89,13 @@ def test_safe_response_text_safety_block():
     assert _safe_response_text(mock_response) is None
 
 
-@pytest.mark.asyncio
-async def test_extract_all_facts_empty_chunks():
+def test_extract_all_facts_empty_chunks():
     """Verify extract_all_facts handles empty chunks without error."""
-    result = await extract_all_facts([], "doc_123", "sample.pdf")
+    result = asyncio.run(extract_all_facts([], "doc_123", "sample.pdf"))
     assert result == []
 
 
-@pytest.mark.asyncio
-async def test_extract_all_facts_deduplication():
+def test_extract_all_facts_deduplication():
     """Verify extract_all_facts eliminates duplicate statements across chunks."""
     f1 = Fact(id="f1", statement="Headline CPI reached 4.5%", category="Inflation", source_doc_id="doc_1")
     f2 = Fact(id="f2", statement="headline cpi reached 4.5%  ", category="Inflation", source_doc_id="doc_1")
@@ -107,7 +106,7 @@ async def test_extract_all_facts_deduplication():
 
     with patch("fact_extractor.extract_facts_from_chunk") as mock_extract:
         mock_extract.side_effect = [[f1], [f2, f3]]
-        unique_facts = await extract_all_facts(chunks, "doc_1", "sample.pdf", api_key="dummy_key")
+        unique_facts = asyncio.run(extract_all_facts(chunks, "doc_1", "sample.pdf", api_key="dummy_key"))
 
     assert len(unique_facts) == 2
     assert unique_facts[0].id == "f1"
