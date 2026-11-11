@@ -193,6 +193,7 @@ pytest backend/tests -v --cov=backend --cov-report=term-missing
 | `DELETE` | `/api/documents/{doc_id}` | Required | Delete a document and cascade-remove its facts and relationships |
 | `POST` | `/api/upload` | Optional | Upload a PDF, extract atomic facts via Gemini, and compute relationships |
 | `GET` | `/api/facts` | Optional | Query facts with optional `category`, `doc_id`, `min_confidence`, `search`, `limit`, and `offset` |
+| `GET` | `/api/facts/{fact_id}` | Optional | Retrieve a specific fact with its linked cross-document relationships |
 | `GET` | `/api/categories` | Optional | Retrieve fact distribution counts grouped by category |
 | `GET` | `/api/relationships` | Optional | Query cross-document relationships with optional `relationship_type`, `limit`, and `offset` |
 | `GET` | `/api/cases` | Optional | Retrieve curated analytical case studies (Corroboration, Contradiction, etc.) |

@@ -15,15 +15,15 @@ backend/
 ├── knowledge_store.py   # In-memory store for fallback & static dataset generation
 ├── demo_data.py         # Pre-verified macroeconomic & corporate financial datasets
 ├── requirements.txt     # Pinned production dependencies
-└── tests/               # Comprehensive automated test suite (50+ unit & contract tests)
+└── tests/               # Comprehensive automated test suite (75+ unit & contract tests, 84% coverage)
     ├── test_api_endpoints.py    # REST API contracts, status codes, query filtering & error handling
     ├── test_demo_data.py        # Dataset referential integrity and case study constraints
     ├── test_fact_extractor.py   # JSON repair, code fence stripping, and safety fallbacks
-    ├── test_fact_linker.py      # Candidate pair generation and incremental linking logic
+    ├── test_fact_linker.py      # Candidate pairing, LLM classification, and concurrency
     ├── test_firestore_store.py  # Mocked Firestore CRUD and cascade deletions
     ├── test_knowledge_store.py  # In-memory store lifecycle, search, and graph querying
     ├── test_models.py           # Pydantic v2 validation and confidence boundary checks
-    └── test_pdf_processor.py    # Sliding-window page chunker and table detection heuristics
+    └── test_pdf_processor.py    # PDF extraction, metadata, table heuristics & window chunker
 ```
 
 ## Running Locally
