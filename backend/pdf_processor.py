@@ -1,10 +1,13 @@
 """
 Synaptica — PDF Processor
-Extracts text content from PDF files with page-level metadata using PyMuPDF.
+Extracts text content from PDF files with page-level metadata using pypdf.
 """
+import logging
 import os
 from typing import List, Optional
 from dataclasses import dataclass, field
+
+logger = logging.getLogger("synaptica.pdf_processor")
 
 
 @dataclass
@@ -34,11 +37,11 @@ def extract_pdf_text(filepath: str) -> Optional[DocumentContent]:
     try:
         from pypdf import PdfReader
     except ImportError:
-        print("WARNING: pypdf not installed. Install with: pip install pypdf")
+        logger.warning("pypdf not installed. Install with: pip install pypdf")
         return None
 
     if not os.path.exists(filepath):
-        print(f"File not found: {filepath}")
+        logger.warning(f"File not found: {filepath}")
         return None
 
     try:
@@ -76,7 +79,7 @@ def extract_pdf_text(filepath: str) -> Optional[DocumentContent]:
         return content
 
     except Exception as e:
-        print(f"Error processing PDF {filepath}: {e}")
+        logger.error(f"Error processing PDF {filepath}: {e}")
         return None
 
 
@@ -113,10 +116,7 @@ def chunk_pages(content: DocumentContent, chunk_size: int = 3) -> List[dict]:
         chunk_pages = pages[i:i + chunk_size]
         if not chunk_pages:
             continue
-        
-        combined_text = "\n\n--- Page {} ---\n\n".join(
-            [p.text for p in chunk_pages]
-        )
+
         # Format the page number markers properly
         page_texts = []
         for p in chunk_pages:
