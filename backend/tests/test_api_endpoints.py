@@ -160,3 +160,27 @@ def test_relationships_filtered_by_type():
         assert item["relationship"]["relationship_type"] == "corroborates"
 
 
+def test_get_fact_detail_success():
+    """Verify /api/facts/{fact_id} retrieves a specific fact with its linked relationships."""
+    res_facts = client.get("/api/facts?limit=1")
+    assert res_facts.status_code == 200
+    first_fact = res_facts.json()[0]
+    fact_id = first_fact["id"]
+
+    response = client.get(f"/api/facts/{fact_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert "fact" in data
+    assert data["fact"]["id"] == fact_id
+    assert "related" in data
+    assert isinstance(data["related"], list)
+
+
+def test_get_fact_detail_not_found():
+    """Verify /api/facts/{fact_id} returns 404 for non-existent fact ID."""
+    response = client.get("/api/facts/fact-nonexistent-999")
+    assert response.status_code == 404
+    assert response.json().get("detail") == "Fact not found"
+
+
+

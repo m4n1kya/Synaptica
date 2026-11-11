@@ -261,6 +261,45 @@ async def list_facts(
         facts = facts[:limit]
     return [f.model_dump() for f in facts]
 
+
+@app.get("/api/facts/{fact_id}")
+async def get_fact_detail(fact_id: str, user_id: Optional[str] = Depends(get_optional_user)) -> Dict[str, Any]:
+    """Retrieve details for a specific fact including its cross-document relationships."""
+    if user_id:
+        store = FirestoreStore(user_id)
+        fact_ref = store.user_ref.collection('facts').document(fact_id).get()
+        if not fact_ref.exists:
+            raise HTTPException(status_code=404, detail="Fact not found")
+        fact_data = fact_ref.to_dict()
+        all_rels = store.get_relationships()
+        related = [r for r in all_rels if r.fact_a_id == fact_id or r.fact_b_id == fact_id]
+        all_facts = {f.id: f for f in store.get_all_facts()}
+        related_facts = []
+        for r in related:
+            other_id = r.fact_b_id if r.fact_a_id == fact_id else r.fact_a_id
+            other_fact = all_facts.get(other_id)
+            if other_fact:
+                related_facts.append({"fact": other_fact.model_dump(), "relationship": r.model_dump()})
+        return {
+            "fact": fact_data,
+            "related": related_facts
+        }
+    else:
+        result = demo_store.get_fact_with_relationships(fact_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Fact not found")
+        return {
+            "fact": result["fact"].model_dump(),
+            "related": [
+                {
+                    "fact": item["fact"].model_dump(),
+                    "relationship": item["relationship"].model_dump()
+                }
+                for item in result["related"]
+            ]
+        }
+
+
 @app.get("/api/categories")
 async def list_categories(user_id: Optional[str] = Depends(get_optional_user)) -> List[Dict[str, Any]]:
     """Retrieve fact distribution count grouped by category."""
@@ -333,6 +372,9 @@ async def serve_root():
 if os.path.exists(FRONTEND_DIR):
     app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="css")
     app.mount("/js", StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")), name="js")
+    img_dir = os.path.join(FRONTEND_DIR, "img")
+    if os.path.exists(img_dir):
+        app.mount("/img", StaticFiles(directory=img_dir), name="img")
     assets_dir = os.path.join(FRONTEND_DIR, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
