@@ -1,12 +1,14 @@
 """
 Unit tests for Synaptica PDF processing and sliding-window chunking utilities.
 """
+from unittest.mock import MagicMock, patch
 from pdf_processor import (
     PageContent,
     DocumentContent,
     _is_numeric_token,
     _detect_table_pattern,
     chunk_pages,
+    extract_pdf_text,
 )
 
 
@@ -86,3 +88,47 @@ def test_chunk_pages_empty_document():
     doc = DocumentContent(filename="empty.pdf", total_pages=0, pages=[])
     chunks = chunk_pages(doc, chunk_size=3)
     assert chunks == []
+
+
+def test_extract_pdf_text_missing_file():
+    """Verify extract_pdf_text returns None when target file does not exist."""
+    result = extract_pdf_text("non_existent_document_404.pdf")
+    assert result is None
+
+
+def test_extract_pdf_text_successful_mock():
+    """Verify extract_pdf_text correctly parses pages, metadata, tables, and images."""
+    mock_page = MagicMock()
+    mock_page.extract_text.return_value = "Col1\tCol2\tCol3\tCol4\tCol5\tCol6\tCol7"
+    mock_page.images = [MagicMock()]
+
+    mock_reader = MagicMock()
+    mock_reader.pages = [mock_page]
+    mock_reader.metadata = {
+        "/Title": "Annual Fiscal Policy",
+        "/Author": "Ministry of Finance",
+        "/Subject": "Macroeconomics",
+        "/Creator": "ReportEngine",
+    }
+
+    with patch("os.path.exists", return_value=True), patch("pypdf.PdfReader", return_value=mock_reader):
+        content = extract_pdf_text("mocked_annual_report.pdf")
+
+    assert content is not None
+    assert content.filename == "mocked_annual_report.pdf"
+    assert content.total_pages == 1
+    assert content.metadata["title"] == "Annual Fiscal Policy"
+    assert content.metadata["author"] == "Ministry of Finance"
+    assert len(content.pages) == 1
+    page = content.pages[0]
+    assert page.page_number == 1
+    assert page.has_tables is True
+    assert page.has_images is True
+
+
+def test_extract_pdf_text_exception_handled():
+    """Verify extract_pdf_text catches corrupt PDF read errors gracefully."""
+    with patch("os.path.exists", return_value=True), patch("pypdf.PdfReader", side_effect=Exception("Corrupt PDF")):
+        result = extract_pdf_text("corrupted_report.pdf")
+    assert result is None
+
