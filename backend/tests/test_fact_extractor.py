@@ -4,8 +4,13 @@ Unit tests for Synaptica LLM fact extraction parsing and safety utilities.
 import asyncio
 import json
 import pytest
-from unittest.mock import MagicMock, patch
-from fact_extractor import _parse_json, _safe_response_text, extract_all_facts
+from unittest.mock import MagicMock, AsyncMock, patch
+from fact_extractor import (
+    _parse_json,
+    _safe_response_text,
+    extract_all_facts,
+    extract_facts_from_chunk,
+)
 from models import Fact
 
 
@@ -111,4 +116,103 @@ def test_extract_all_facts_deduplication():
     assert len(unique_facts) == 2
     assert unique_facts[0].id == "f1"
     assert unique_facts[1].id == "f3"
+
+
+def test_extract_facts_from_chunk_no_api_key():
+    """Verify extract_facts_from_chunk returns empty list when API key is missing."""
+    chunk = {"text": "A" * 100, "page_numbers": [1]}
+    with patch.dict("os.environ", {}, clear=True):
+        facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key=""))
+    assert facts == []
+
+
+def test_extract_facts_from_chunk_short_text():
+    """Verify extract_facts_from_chunk skips chunks shorter than 50 characters."""
+    chunk = {"text": "Too short text", "page_numbers": [1]}
+    facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key="valid_key"))
+    assert facts == []
+
+
+def test_extract_facts_from_chunk_success_mock():
+    """Verify extract_facts_from_chunk parses structured facts and context correctly."""
+    chunk = {
+        "text": "Gross domestic product accelerated to 8.2% during FY2024-25 driven by manufacturing.",
+        "page_numbers": [1]
+    }
+
+    mock_part = MagicMock()
+    mock_part.text = json.dumps([
+        {
+            "statement": "GDP grew by 8.2% in FY2024-25",
+            "value": "8.2",
+            "unit": "%",
+            "category": "GDP Growth",
+            "confidence": 0.95,
+            "evidence_text": "Gross domestic product accelerated to 8.2%",
+            "page_numbers": [1],
+            "context": {
+                "time_period": "FY2024-25",
+                "scope": "National",
+                "methodology": "National Accounts"
+            }
+        }
+    ])
+    mock_candidate = MagicMock()
+    mock_candidate.finish_reason = "STOP"
+    mock_candidate.content.parts = [mock_part]
+
+    mock_response = MagicMock()
+    mock_response.candidates = [mock_candidate]
+
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+
+    with patch("google.genai.Client", return_value=mock_client):
+        facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key="dummy_key"))
+
+    assert len(facts) == 1
+    f = facts[0]
+    assert f.statement == "GDP grew by 8.2% in FY2024-25"
+    assert f.value == "8.2"
+    assert f.unit == "%"
+    assert f.category == "GDP Growth"
+    assert f.confidence == 0.95
+    assert f.context.time_period == "FY2024-25"
+    assert f.context.scope == "National"
+
+
+def test_extract_facts_from_chunk_json_decode_error():
+    """Verify extract_facts_from_chunk returns empty list on invalid JSON response."""
+    chunk = {"text": "A" * 100, "page_numbers": [1]}
+
+    mock_part = MagicMock()
+    mock_part.text = "This is not valid JSON content"
+    mock_candidate = MagicMock()
+    mock_candidate.finish_reason = "STOP"
+    mock_candidate.content.parts = [mock_part]
+
+    mock_response = MagicMock()
+    mock_response.candidates = [mock_candidate]
+
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+
+    with patch("google.genai.Client", return_value=mock_client):
+        facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key="dummy_key"))
+
+    assert facts == []
+
+
+def test_extract_facts_from_chunk_general_exception():
+    """Verify extract_facts_from_chunk returns empty list on unexpected exception."""
+    chunk = {"text": "A" * 100, "page_numbers": [1]}
+
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(side_effect=RuntimeError("Unexpected client error"))
+
+    with patch("google.genai.Client", return_value=mock_client):
+        facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key="dummy_key"))
+
+    assert facts == []
+
 

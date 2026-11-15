@@ -3,11 +3,14 @@ Synaptica — Fact Extractor
 LLM-powered fact extraction from PDF text chunks using Google Gemini.
 """
 import json
+import logging
 import os
 import re
 import uuid
 from typing import List, Optional
 from models import Fact, Context
+
+logger = logging.getLogger("synaptica.fact_extractor")
 
 
 EXTRACTION_PROMPT = """You are a data extraction assistant. Extract factual information from the following document text.
@@ -50,7 +53,7 @@ def _safe_response_text(response) -> Optional[str]:
     try:
         # Check if candidates exist and have content
         if not response.candidates:
-            print("  WARNING: No candidates in response (blocked or empty)")
+            logger.warning("No candidates in response (blocked or empty)")
             return None
         
         candidate = response.candidates[0]
@@ -58,7 +61,7 @@ def _safe_response_text(response) -> Optional[str]:
         # Check finish reason
         finish_reason = str(candidate.finish_reason) if hasattr(candidate, 'finish_reason') else "UNKNOWN"
         if "SAFETY" in finish_reason or "BLOCK" in finish_reason:
-            print(f"  WARNING: Response blocked by safety filter: {finish_reason}")
+            logger.warning(f"Response blocked by safety filter: {finish_reason}")
             return None
         
         # Try to get text
@@ -69,7 +72,7 @@ def _safe_response_text(response) -> Optional[str]:
         return response.text
         
     except Exception as e:
-        print(f"  WARNING: Could not extract response text: {e}")
+        logger.warning(f"Could not extract response text: {e}")
         return None
 
 
@@ -82,12 +85,12 @@ async def extract_facts_from_chunk(
     if not api_key:
         api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
-        print("WARNING: No GEMINI_API_KEY found!")
+        logger.warning("No GEMINI_API_KEY found!")
         return []
 
     chunk_text = chunk["text"].strip()
     if len(chunk_text) < 50:
-        print(f"  Chunk too short ({len(chunk_text)} chars), skipping.")
+        logger.info(f"Chunk too short ({len(chunk_text)} chars), skipping.")
         return []
 
     raw_text = ""
@@ -126,9 +129,9 @@ async def extract_facts_from_chunk(
             if not raw_text:
                 return []
 
-            print(f"  Gemini response: {len(raw_text)} chars")
+            logger.info(f"Gemini response: {len(raw_text)} chars")
             raw_facts = _parse_json(raw_text)
-            print(f"  Parsed {len(raw_facts)} facts.")
+            logger.info(f"Parsed {len(raw_facts)} facts.")
 
             facts = []
             for raw in raw_facts:
@@ -157,7 +160,7 @@ async def extract_facts_from_chunk(
             return facts
 
         except json.JSONDecodeError as e:
-            print(f"  JSON parse error: {e}. Raw: {repr(raw_text[:300])}")
+            logger.warning(f"JSON parse error: {e}. Raw: {repr(raw_text[:300])}")
             return []
         except Exception as e:
             err_str = str(e)
@@ -165,13 +168,13 @@ async def extract_facts_from_chunk(
                 "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or
                 "quota" in err_str.lower()):
                 wait = (2 ** attempt) * 10  # 10s, 20s, 40s
-                print(f"  Rate limit/overload (attempt {attempt+1}/3), retrying in {wait}s...")
+                logger.warning(f"Rate limit/overload (attempt {attempt+1}/3), retrying in {wait}s...")
                 await asyncio.sleep(wait)
                 continue
-            print(f"  Fact extraction error ({type(e).__name__}): {e}")
+            logger.error(f"Fact extraction error ({type(e).__name__}): {e}")
             return []
     
-    print(f"  All 3 attempts failed for chunk pages={chunk['page_numbers']}")
+    logger.warning(f"All 3 attempts failed for chunk pages={chunk['page_numbers']}")
     return []
 
 
@@ -184,15 +187,15 @@ async def extract_all_facts(
     import asyncio
 
     if not chunks:
-        print("WARNING: No chunks provided!")
+        logger.warning("No chunks provided!")
         return []
 
-    print(f"Processing {len(chunks)} chunks for '{doc_name}'...")
+    logger.info(f"Processing {len(chunks)} chunks for '{doc_name}'...")
 
     all_facts = []
     # Process SEQUENTIALLY to avoid rate limits on free tier
     for i, chunk in enumerate(chunks):
-        print(f"  Chunk {i+1}/{len(chunks)} pages={chunk['page_numbers']}...")
+        logger.info(f"Chunk {i+1}/{len(chunks)} pages={chunk['page_numbers']}...")
         facts = await extract_facts_from_chunk(chunk, doc_id, doc_name, api_key)
         all_facts.extend(facts)
         # Small delay between chunks to avoid rate limiting
@@ -207,6 +210,6 @@ async def extract_all_facts(
             seen.add(key)
             unique.append(f)
 
-    print(f"Total unique facts: {len(unique)}")
+    logger.info(f"Total unique facts: {len(unique)}")
     return unique
 
