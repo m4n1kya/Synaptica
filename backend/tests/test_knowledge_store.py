@@ -1,6 +1,7 @@
 """
 Unit tests for Synaptica in-memory KnowledgeStore operations, querying, and cascade deletion.
 """
+from unittest.mock import patch
 from knowledge_store import KnowledgeStore
 from models import Document, Fact, Relationship
 
@@ -153,3 +154,70 @@ def test_knowledge_store_stats_calculation():
     assert stats.contradictions == 0
     assert stats.categories.get("Revenue") == 2
     assert abs(stats.avg_confidence - 0.85) < 1e-4
+
+
+def test_knowledge_store_get_all_relationships_filtered_by_type():
+    """Verify get_all_relationships filters by relationship_type correctly."""
+    store = KnowledgeStore(load_demo=False)
+    r1 = Relationship(id="r1", fact_a_id="f1", fact_b_id="f2", relationship_type="corroborates")
+    r2 = Relationship(id="r2", fact_a_id="f1", fact_b_id="f3", relationship_type="contradicts")
+    store.add_relationship(r1)
+    store.add_relationship(r2)
+
+    corrobs = store.get_all_relationships(rel_type="corroborates")
+    assert len(corrobs) == 1
+    assert corrobs[0].id == "r1"
+
+    contras = store.get_all_relationships(rel_type="contradicts")
+    assert len(contras) == 1
+    assert contras[0].id == "r2"
+
+
+def test_knowledge_store_get_relationships_min_confidence():
+    """Verify get_relationships filters by minimum confidence score."""
+    store = KnowledgeStore(load_demo=False)
+    r1 = Relationship(id="r1", fact_a_id="f1", fact_b_id="f2", relationship_type="corroborates", confidence=0.92)
+    r2 = Relationship(id="r2", fact_a_id="f1", fact_b_id="f3", relationship_type="corroborates", confidence=0.65)
+    store.add_relationship(r1)
+    store.add_relationship(r2)
+
+    filtered = store.get_relationships(min_confidence=0.80)
+    assert len(filtered) == 1
+    assert filtered[0].id == "r1"
+
+    all_rels = store.get_relationships(min_confidence=0.0)
+    assert len(all_rels) == 2
+
+
+def test_knowledge_store_save_and_load_disk(tmp_path):
+    """Verify state serialization to disk via save_to_disk and restoration via load_from_disk."""
+    store = KnowledgeStore(load_demo=False)
+    doc = Document(id="doc_disk_1", filename="disk_report.pdf", page_count=5)
+    fact = Fact(id="f_disk_1", statement="Operating margin expanded by 350 bps", category="Profitability", source_doc_id="doc_disk_1")
+    rel = Relationship(id="r_disk_1", fact_a_id="f_disk_1", fact_b_id="f_other", relationship_type="corroborates")
+
+    store.add_document(doc)
+    store.add_fact(fact)
+    store.add_relationship(rel)
+
+    with patch("knowledge_store.DATA_DIR", str(tmp_path)):
+        store.save_to_disk()
+
+        restored_store = KnowledgeStore(load_demo=False)
+        loaded = restored_store.load_from_disk()
+
+    assert loaded is True
+    assert len(restored_store.get_all_documents()) == 1
+    assert restored_store.documents["doc_disk_1"].filename == "disk_report.pdf"
+    assert len(restored_store.get_all_facts()) == 1
+    assert restored_store.facts["f_disk_1"].statement == "Operating margin expanded by 350 bps"
+    assert len(restored_store.get_all_relationships()) == 1
+
+
+def test_knowledge_store_load_from_disk_missing_file(tmp_path):
+    """Verify load_from_disk returns False when knowledge_layer.json does not exist."""
+    store = KnowledgeStore(load_demo=False)
+    with patch("knowledge_store.DATA_DIR", str(tmp_path)):
+        result = store.load_from_disk()
+    assert result is False
+
