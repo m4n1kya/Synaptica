@@ -118,3 +118,107 @@ def test_firestore_store_get_cases(mock_get_db):
     from firestore_store import FirestoreStore
     store = FirestoreStore("user_123")
     assert store.get_cases() == []
+
+
+@patch("firestore_store.get_db")
+def test_firestore_store_add_relationship(mock_get_db):
+    """Verify add_relationship stores relationship document in Firestore."""
+    mock_db = MagicMock()
+    mock_get_db.return_value = mock_db
+
+    from firestore_store import FirestoreStore
+    store = FirestoreStore("user_123")
+
+    rel = Relationship(
+        id="rel_abc",
+        fact_a_id="fa",
+        fact_b_id="fb",
+        relationship_type="corroborates",
+        explanation="Consistent reports",
+        confidence=0.9
+    )
+    result = store.add_relationship(rel)
+
+    assert result.id == "rel_abc"
+    rel_ref = store.user_ref.collection().document()
+    rel_ref.set.assert_called_once_with(rel.model_dump())
+
+
+@patch("firestore_store.get_db")
+def test_firestore_store_get_all_documents(mock_get_db):
+    """Verify get_all_documents streams and parses documents."""
+    mock_db = MagicMock()
+    mock_get_db.return_value = mock_db
+
+    from firestore_store import FirestoreStore
+    store = FirestoreStore("user_123")
+
+    mock_doc = MagicMock()
+    mock_doc.to_dict.return_value = {
+        "id": "doc_stream_1",
+        "filename": "annual_filing.pdf",
+        "total_pages": 12,
+        "status": "processed"
+    }
+    store.user_ref.collection().stream.return_value = [mock_doc]
+
+    docs = store.get_all_documents()
+    assert len(docs) == 1
+    assert docs[0].id == "doc_stream_1"
+    assert docs[0].filename == "annual_filing.pdf"
+
+
+@patch("firestore_store.get_db")
+def test_firestore_store_get_all_facts_filtered(mock_get_db):
+    """Verify get_all_facts applies category, doc_id, and min_confidence filters."""
+    mock_db = MagicMock()
+    mock_get_db.return_value = mock_db
+
+    from firestore_store import FirestoreStore
+    store = FirestoreStore("user_123")
+
+    mock_fact = MagicMock()
+    mock_fact.to_dict.return_value = {
+        "id": "fact_stream_1",
+        "statement": "EBITDA increased 24%",
+        "category": "Profitability",
+        "source_doc_id": "doc_1",
+        "confidence": 0.88
+    }
+    # Mock chain: query.where().where().where().stream()
+    query_mock = store.user_ref.collection()
+    query_mock.where.return_value = query_mock
+    query_mock.stream.return_value = [mock_fact]
+
+    facts = store.get_all_facts(category="Profitability", doc_id="doc_1", min_confidence=0.8)
+    assert len(facts) == 1
+    assert facts[0].id == "fact_stream_1"
+    assert facts[0].statement == "EBITDA increased 24%"
+
+
+@patch("firestore_store.get_db")
+def test_firestore_store_get_relationships_filtered(mock_get_db):
+    """Verify get_relationships filters by minimum confidence score."""
+    mock_db = MagicMock()
+    mock_get_db.return_value = mock_db
+
+    from firestore_store import FirestoreStore
+    store = FirestoreStore("user_123")
+
+    mock_rel = MagicMock()
+    mock_rel.to_dict.return_value = {
+        "id": "rel_stream_1",
+        "fact_a_id": "fa",
+        "fact_b_id": "fb",
+        "relationship_type": "contradicts",
+        "confidence": 0.95
+    }
+    query_mock = store.user_ref.collection()
+    query_mock.where.return_value = query_mock
+    query_mock.stream.return_value = [mock_rel]
+
+    rels = store.get_relationships(min_confidence=0.9)
+    assert len(rels) == 1
+    assert rels[0].id == "rel_stream_1"
+    assert rels[0].relationship_type == "contradicts"
+
