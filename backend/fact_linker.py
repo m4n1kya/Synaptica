@@ -3,11 +3,14 @@ Synaptica — Fact Linker
 Cross-document fact comparison and relationship classification using LLM.
 """
 import json
+import logging
 import os
 import re
 import uuid
 from typing import List, Optional, Tuple
 from models import Fact, Relationship
+
+logger = logging.getLogger("synaptica.fact_linker")
 
 
 
@@ -126,7 +129,7 @@ async def classify_relationship(
         )
 
     except Exception as e:
-        print(f"Linking error: {e}")
+        logger.error(f"Linking error: {e}")
         return None
 
 
@@ -137,12 +140,12 @@ async def link_all_facts(
     """Find and classify all cross-document fact relationships concurrently."""
     import asyncio
     pairs = find_candidate_pairs(facts)
-    print(f"  Found {len(pairs)} candidate pairs for comparison...")
+    logger.info(f"Found {len(pairs)} candidate pairs for comparison...")
     
     semaphore = asyncio.Semaphore(10)
     
     async def process_pair_with_semaphore(i: int, fact_a: Fact, fact_b: Fact):
-        print(f"  Analyzing pair {i+1}/{len(pairs)}...")
+        logger.info(f"Analyzing pair {i+1}/{len(pairs)}...")
         async with semaphore:
             return await classify_relationship(fact_a, fact_b, api_key)
             
@@ -154,7 +157,7 @@ async def link_all_facts(
         if isinstance(rel, Relationship):
             relationships.append(rel)
         elif isinstance(rel, Exception):
-            print(f"Error linking pair: {rel}")
+            logger.warning(f"Error linking pair: {rel}")
             
     return relationships
 
@@ -186,12 +189,12 @@ async def link_incremental(
     """Find and classify relationships only for newly added facts concurrently."""
     import asyncio
     pairs = find_candidate_pairs_incremental(new_facts, existing_facts)
-    print(f"  Found {len(pairs)} candidate pairs for incremental linking...")
+    logger.info(f"Found {len(pairs)} candidate pairs for incremental linking...")
     
     semaphore = asyncio.Semaphore(10)
     
     async def process_pair_with_semaphore(i: int, fact_a: Fact, fact_b: Fact):
-        print(f"  Analyzing incremental pair {i+1}/{len(pairs)}...")
+        logger.info(f"Analyzing incremental pair {i+1}/{len(pairs)}...")
         async with semaphore:
             return await classify_relationship(fact_a, fact_b, api_key)
             
@@ -203,6 +206,6 @@ async def link_incremental(
         if isinstance(rel, Relationship):
             relationships.append(rel)
         elif isinstance(rel, Exception):
-            print(f"Error linking pair: {rel}")
+            logger.warning(f"Error linking pair: {rel}")
             
     return relationships

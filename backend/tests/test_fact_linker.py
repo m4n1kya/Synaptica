@@ -9,6 +9,7 @@ from fact_linker import (
     find_candidate_pairs_incremental,
     classify_relationship,
     link_all_facts,
+    link_incremental,
 )
 
 
@@ -285,5 +286,35 @@ def test_link_all_facts_concurrent_mock():
 
     assert len(relationships) == 1
     assert relationships[0].id == "rel-1"
+
+
+def test_link_incremental_empty_inputs():
+    """Verify link_incremental returns empty list when either fact list is empty."""
+    fact = Fact(id="f1", statement="Revenue grew", category="Revenue", source_doc_id="d1")
+    assert asyncio.run(link_incremental([], [fact], api_key="dummy_key")) == []
+    assert asyncio.run(link_incremental([fact], [], api_key="dummy_key")) == []
+    assert asyncio.run(link_incremental([], [], api_key="dummy_key")) == []
+
+
+def test_link_incremental_concurrent_mock():
+    """Verify link_incremental pairs new facts with existing facts and gathers relationships."""
+    new_fact = Fact(id="nf1", statement="New revenue data", category="Revenue", source_doc_id="d_new")
+    existing_fact = Fact(id="ef1", statement="Old revenue data", category="Revenue", source_doc_id="d_old")
+    rel = Relationship(
+        id="rel-inc-1",
+        fact_a_id="nf1",
+        fact_b_id="ef1",
+        relationship_type="corroborates",
+        explanation="Both state strong revenue numbers",
+        confidence=0.92
+    )
+
+    with patch("fact_linker.classify_relationship", new_callable=AsyncMock) as mock_classify:
+        mock_classify.return_value = rel
+        relationships = asyncio.run(link_incremental([new_fact], [existing_fact], api_key="mock_key"))
+
+    assert len(relationships) == 1
+    assert relationships[0].id == "rel-inc-1"
+
 
 
