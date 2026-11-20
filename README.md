@@ -174,10 +174,14 @@ FastAPI serves both the REST API and the static frontend locally:
 
 ### 4. Running Automated Tests & Coverage
 
-Execute the automated test suite across all API contracts, Pydantic models, and ML pipelines:
+Execute the automated test suite (95 tests) across all API contracts, Pydantic models, and ML pipelines:
 
 ```bash
-pytest backend/tests -v --cov=backend --cov-report=term-missing
+# Run all tests using pyproject.toml configuration
+pytest
+
+# Run with full coverage report
+pytest --cov=backend --cov-report=term-missing
 ```
 
 ---
@@ -187,6 +191,8 @@ pytest backend/tests -v --cov=backend --cov-report=term-missing
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/health` | Public | Service health check and runtime status |
+| `GET` | `/api/debug/env` | Public | Inspect masked status of runtime environment variables |
+| `GET` | `/api/debug/gemini` | Public | Verify Gemini API connectivity and generation |
 | `GET` | `/api/stats` | Optional | Aggregated counts of documents, facts, categories, and relationships |
 | `GET` | `/api/documents` | Optional | List all ingested documents (returns demo dataset if unauthenticated) |
 | `GET` | `/api/documents/{doc_id}` | Optional | Retrieve detailed document metadata and extracted atomic facts |
