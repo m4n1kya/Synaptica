@@ -6,6 +6,7 @@ import os
 import sys
 import uuid
 import shutil
+import logging
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, UploadFile, File, Query, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,6 +47,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Initialize global demo store for unauthenticated users
 demo_store = KnowledgeStore(load_demo=True)
+logger = logging.getLogger("synaptica.api")
 
 # -- Authentication ---------------------------------------------------------
 
@@ -59,7 +61,7 @@ def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depen
         decoded_token = auth.verify_id_token(token)
         return decoded_token['uid']
     except Exception as e:
-        print("Token verification failed:", e)
+        logger.warning("Token verification failed: %s", e)
         return None
 
 def get_optional_user(user_id: Optional[str] = Depends(get_current_user)):

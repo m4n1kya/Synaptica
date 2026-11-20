@@ -1,6 +1,7 @@
 """
 Integration contract tests for Synaptica REST API endpoints.
 """
+from unittest.mock import MagicMock, AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from main import app
@@ -181,6 +182,51 @@ def test_get_fact_detail_not_found():
     response = client.get("/api/facts/fact-nonexistent-999")
     assert response.status_code == 404
     assert response.json().get("detail") == "Fact not found"
+
+
+def test_debug_env_endpoint():
+    """Verify /api/debug/env reports masked presence of core environment variables."""
+    with patch.dict("os.environ", {"GEMINI_API_KEY": "AIzaSySecret", "FIREBASE_SERVICE_ACCOUNT": "{}"}):
+        response = client.get("/api/debug/env")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["GEMINI_API_KEY"] == "SET"
+        assert data["FIREBASE_SERVICE_ACCOUNT"] == "SET"
+
+
+def test_debug_gemini_missing_key():
+    """Verify /api/debug/gemini returns error when GEMINI_API_KEY is unset."""
+    with patch.dict("os.environ", {}, clear=True):
+        response = client.get("/api/debug/gemini")
+        assert response.status_code == 200
+        assert response.json().get("error") == "GEMINI_API_KEY not set"
+
+
+def test_debug_gemini_success_mock():
+    """Verify /api/debug/gemini generates response payload successfully."""
+    mock_resp = MagicMock()
+    mock_resp.text = '[{"statement": "Test fact works", "category": "General", "confidence": 0.9}]'
+
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_resp)
+
+    with patch.dict("os.environ", {"GEMINI_API_KEY": "dummy_key"}), patch("google.genai.Client", return_value=mock_client):
+        response = client.get("/api/debug/gemini")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+        assert "Test fact works" in data["raw_text"]
+
+
+def test_invalid_bearer_token_fallback():
+    """Verify invalid Authorization header logs warning and falls back to demo mode without 500 error."""
+    with patch("firebase_admin.auth.verify_id_token", side_effect=Exception("Invalid token")):
+        response = client.get("/api/stats", headers={"Authorization": "Bearer fake_token_xyz"})
+        assert response.status_code == 200
+        data = response.json()
+        assert "total_documents" in data
+        assert "total_facts" in data
+
 
 
 
