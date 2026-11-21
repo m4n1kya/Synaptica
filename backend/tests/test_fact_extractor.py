@@ -216,3 +216,107 @@ def test_extract_facts_from_chunk_general_exception():
     assert facts == []
 
 
+def test_safe_response_text_fallback_to_text():
+    """Verify fallback to response.text when candidate content parts are absent."""
+    mock_candidate = MagicMock()
+    mock_candidate.finish_reason = "STOP"
+    mock_candidate.content.parts = []
+
+    mock_response = MagicMock()
+    mock_response.candidates = [mock_candidate]
+    mock_response.text = '[{"statement": "Direct text fallback", "value": "100"}]'
+
+    text = _safe_response_text(mock_response)
+    assert text == '[{"statement": "Direct text fallback", "value": "100"}]'
+
+
+def test_safe_response_text_exception_handled():
+    """Verify exceptions during response text extraction return None without crashing."""
+    mock_response = MagicMock()
+    # Accessing candidates raises an unhandled RuntimeError
+    type(mock_response).candidates = property(lambda self: (_ for _ in ()).throw(RuntimeError("Broken candidate access")))
+
+    text = _safe_response_text(mock_response)
+    assert text is None
+
+
+def test_extract_facts_from_chunk_malformed_context_and_empty_statement():
+    """Verify extract_facts_from_chunk handles non-dict context and skips facts without statement."""
+    chunk = {"text": "Gross domestic product accelerated to 8.2% during FY24.", "page_numbers": [2]}
+
+    mock_part = MagicMock()
+    mock_part.text = json.dumps([
+        {
+            "statement": "",  # Empty statement, should be skipped
+            "value": "100",
+        },
+        {
+            "statement": "Real GDP grew by 8.2%",
+            "value": "8.2",
+            "context": "Not a dictionary object",  # Malformed context, should fallback to empty Context
+        }
+    ])
+    mock_candidate = MagicMock()
+    mock_candidate.finish_reason = "STOP"
+    mock_candidate.content.parts = [mock_part]
+
+    mock_response = MagicMock()
+    mock_response.candidates = [mock_candidate]
+
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+
+    with patch("google.genai.Client", return_value=mock_client):
+        facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key="dummy_key"))
+
+    assert len(facts) == 1
+    assert facts[0].statement == "Real GDP grew by 8.2%"
+    assert facts[0].context.time_period == ""
+
+
+def test_extract_facts_from_chunk_rate_limit_retry_success():
+    """Verify extract_facts_from_chunk retries with exponential backoff on 429 / RESOURCE_EXHAUSTED."""
+    chunk = {"text": "A" * 100, "page_numbers": [1]}
+
+    mock_part = MagicMock()
+    mock_part.text = json.dumps([{"statement": "Retried successfully", "value": "10"}])
+    mock_candidate = MagicMock()
+    mock_candidate.finish_reason = "STOP"
+    mock_candidate.content.parts = [mock_part]
+
+    mock_response = MagicMock()
+    mock_response.candidates = [mock_candidate]
+
+    mock_client = MagicMock()
+    # First call raises 429 quota error; second call succeeds
+    mock_client.aio.models.generate_content = AsyncMock(
+        side_effect=[Exception("429 RESOURCE_EXHAUSTED: quota exceeded"), mock_response]
+    )
+
+    with patch("google.genai.Client", return_value=mock_client), patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key="dummy_key"))
+
+    assert len(facts) == 1
+    assert facts[0].statement == "Retried successfully"
+    assert mock_sleep.call_count == 1
+    # First attempt wait should be 10 seconds: (2 ** 0) * 10
+    assert mock_sleep.call_args[0][0] == 10
+
+
+def test_extract_facts_from_chunk_all_retries_fail():
+    """Verify extract_facts_from_chunk returns empty list when all 3 attempts hit rate limits."""
+    chunk = {"text": "A" * 100, "page_numbers": [1]}
+
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(
+        side_effect=Exception("503 Service UNAVAILABLE")
+    )
+
+    with patch("google.genai.Client", return_value=mock_client), patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key="dummy_key"))
+
+    assert facts == []
+    assert mock_sleep.call_count == 3
+
+
+

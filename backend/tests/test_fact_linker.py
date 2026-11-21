@@ -317,4 +317,29 @@ def test_link_incremental_concurrent_mock():
     assert relationships[0].id == "rel-inc-1"
 
 
+def test_link_all_facts_exception_handled():
+    """Verify link_all_facts gracefully logs exceptions from individual pair tasks without crashing."""
+    fact_a = Fact(id="fa", statement="Statement A", category="General", source_doc_id="doc1")
+    fact_b = Fact(id="fb", statement="Statement B", category="General", source_doc_id="doc2")
+
+    with patch("fact_linker.classify_relationship", new_callable=AsyncMock) as mock_classify:
+        mock_classify.side_effect = RuntimeError("Pair analysis network failure")
+        relationships = asyncio.run(link_all_facts([fact_a, fact_b], api_key="test_key"))
+
+    assert relationships == []
+
+
+def test_link_incremental_exception_handled():
+    """Verify link_incremental catches and handles task exceptions gracefully."""
+    new_fact = Fact(id="nf", statement="New fact", category="General", source_doc_id="doc_new")
+    existing_fact = Fact(id="ef", statement="Existing fact", category="General", source_doc_id="doc_old")
+
+    with patch("fact_linker.classify_relationship", new_callable=AsyncMock) as mock_classify:
+        mock_classify.side_effect = TimeoutError("Classification timeout")
+        relationships = asyncio.run(link_incremental([new_fact], [existing_fact], api_key="test_key"))
+
+    assert relationships == []
+
+
+
 

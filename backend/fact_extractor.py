@@ -66,10 +66,12 @@ def _safe_response_text(response) -> Optional[str]:
         
         # Try to get text
         if hasattr(candidate, 'content') and candidate.content and candidate.content.parts:
-            return "".join(p.text for p in candidate.content.parts if hasattr(p, 'text'))
+            text = "".join(p.text for p in candidate.content.parts if hasattr(p, 'text'))
+            if text:
+                return text
         
         # Fallback: try response.text directly
-        return response.text
+        return getattr(response, "text", None)
         
     except Exception as e:
         logger.warning(f"Could not extract response text: {e}")
