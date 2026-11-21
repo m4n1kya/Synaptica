@@ -19,6 +19,19 @@ def test_health_check_endpoint():
     assert "version" in data
 
 
+def test_readiness_endpoint():
+    """Verify /api/ready reports ready status and loaded entity counts."""
+    response = client.get("/api/ready")
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("status") == "ready"
+    assert data.get("service") == "synaptica"
+    assert data.get("documents_loaded") > 0
+    assert data.get("facts_loaded") > 0
+    assert data.get("relationships_loaded") > 0
+    assert data.get("cases_loaded") > 0
+
+
 def test_stats_endpoint():
     """Verify /api/stats returns aggregated metrics across the knowledge layer."""
     response = client.get("/api/stats")
@@ -42,6 +55,20 @@ def test_documents_endpoint():
         assert "id" in first
         assert "filename" in first
         assert "page_count" in first
+
+
+def test_documents_endpoint_dataset_filtering():
+    """Verify /api/documents supports filtering by dataset query parameter."""
+    res_macro = client.get("/api/documents?dataset=india-macroeconomy")
+    assert res_macro.status_code == 200
+    macro_docs = res_macro.json()
+    assert len(macro_docs) > 0
+    for doc in macro_docs:
+        assert doc["dataset"] == "india-macroeconomy"
+
+    res_nonexistent = client.get("/api/documents?dataset=non_existent_dataset_abc")
+    assert res_nonexistent.status_code == 200
+    assert res_nonexistent.json() == []
 
 
 def test_cases_endpoint():

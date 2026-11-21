@@ -221,3 +221,23 @@ def test_knowledge_store_load_from_disk_missing_file(tmp_path):
         result = store.load_from_disk()
     assert result is False
 
+
+def test_knowledge_store_get_all_documents_dataset_filtering():
+    """Verify KnowledgeStore.get_all_documents filters correctly by dataset identifier."""
+    store = KnowledgeStore(load_demo=False)
+    doc_macro = Document(id="d_m", filename="macro.pdf", dataset="macro")
+    doc_delhi = Document(id="d_d", filename="delhi.pdf", dataset="delhivery")
+    store.add_document(doc_macro)
+    store.add_document(doc_delhi)
+
+    assert len(store.get_all_documents()) == 2
+    macro_docs = store.get_all_documents(dataset="macro")
+    assert len(macro_docs) == 1
+    assert macro_docs[0].id == "d_m"
+
+    delhi_docs = store.get_all_documents(dataset="delhivery")
+    assert len(delhi_docs) == 1
+    assert delhi_docs[0].id == "d_d"
+
+    assert store.get_all_documents(dataset="unknown") == []
+

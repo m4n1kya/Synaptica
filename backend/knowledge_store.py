@@ -84,8 +84,11 @@ class KnowledgeStore:
             
         return True
 
-    def get_all_documents(self) -> List[Document]:
-        return list(self.documents.values())
+    def get_all_documents(self, dataset: Optional[str] = None) -> List[Document]:
+        docs = list(self.documents.values())
+        if dataset:
+            docs = [d for d in docs if d.dataset.lower() == dataset.lower()]
+        return docs
 
     def get_all_facts(self, category: Optional[str] = None, 
                       doc_id: Optional[str] = None,

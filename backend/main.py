@@ -74,6 +74,18 @@ async def health_check() -> Dict[str, str]:
     """Service health check returning service status and version."""
     return {"status": "ok", "service": "synaptica", "version": "1.0.0"}
 
+@app.get("/api/ready")
+async def readiness_check() -> Dict[str, Any]:
+    """Service readiness check verifying in-memory demo data and runtime status."""
+    return {
+        "status": "ready",
+        "service": "synaptica",
+        "documents_loaded": len(demo_store.documents),
+        "facts_loaded": len(demo_store.facts),
+        "relationships_loaded": len(demo_store.relationships),
+        "cases_loaded": len(demo_store.cases),
+    }
+
 @app.get("/api/debug/env")
 async def debug_env():
     """Check critical environment variables (values masked)."""
@@ -119,10 +131,13 @@ async def get_stats(user_id: Optional[str] = Depends(get_optional_user)) -> Dict
 # -- Documents --------------------------------------------------------------
 
 @app.get("/api/documents")
-async def list_documents(user_id: Optional[str] = Depends(get_optional_user)) -> List[Dict[str, Any]]:
-    """List all ingested documents in the active workspace."""
+async def list_documents(
+    dataset: Optional[str] = Query(None, description="Filter documents by dataset identifier"),
+    user_id: Optional[str] = Depends(get_optional_user)
+) -> List[Dict[str, Any]]:
+    """List all ingested documents in the active workspace with optional dataset filtering."""
     store = FirestoreStore(user_id) if user_id else demo_store
-    docs = store.get_all_documents()
+    docs = store.get_all_documents(dataset=dataset)
     return [d.model_dump() for d in docs]
 
 

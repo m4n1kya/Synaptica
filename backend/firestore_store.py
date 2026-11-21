@@ -77,9 +77,12 @@ class FirestoreStore:
                     
         return True
 
-    def get_all_documents(self) -> List[Document]:
+    def get_all_documents(self, dataset: Optional[str] = None) -> List[Document]:
+        query = self.user_ref.collection('documents')
+        if dataset:
+            query = query.where('dataset', '==', dataset)
         docs = []
-        for doc in self.user_ref.collection('documents').stream():
+        for doc in query.stream():
             docs.append(Document(**doc.to_dict()))
         return docs
 
