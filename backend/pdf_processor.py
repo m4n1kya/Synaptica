@@ -85,7 +85,7 @@ def extract_pdf_text(filepath: str) -> Optional[DocumentContent]:
 
 def _detect_table_pattern(text: str) -> bool:
     """Heuristic to detect table-like patterns in extracted text."""
-    lines = text.split("\n")
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
     if len(lines) < 3:
         return False
     # Count lines with multiple number-like tokens (suggests data rows)
@@ -99,8 +99,28 @@ def _detect_table_pattern(text: str) -> bool:
 
 
 def _is_numeric_token(token: str) -> bool:
-    """Check if a token looks like a number (including formatted ones)."""
-    cleaned = token.replace(",", "").replace(".", "").replace("-", "").replace("%", "").replace("₹", "")
+    """Check if a token looks like a number (including currency, accounting parentheses, and financial magnitudes)."""
+    if not token:
+        return False
+    # Strip common enclosing punctuation (parentheses for negative financial figures, brackets, quotes)
+    cleaned = token.strip(" \t\n\r()[]\"'")
+    if not cleaned:
+        return False
+
+    # Strip currency symbols and signs
+    for prefix in ("$", "€", "£", "¥", "₹", "+", "-"):
+        if cleaned.startswith(prefix):
+            cleaned = cleaned[len(prefix):].strip()
+
+    # Strip financial suffixes (case-insensitive)
+    lower = cleaned.lower()
+    for suffix in ("bps", "crore", "lakh", "bn", "mn", "cr", "%", "k", "m", "b", "x"):
+        if lower.endswith(suffix):
+            cleaned = cleaned[:-len(suffix)].strip()
+            break
+
+    # Remove separators and decimals
+    cleaned = cleaned.replace(",", "").replace(".", "").replace("-", "")
     return cleaned.isdigit() and len(cleaned) > 0
 
 

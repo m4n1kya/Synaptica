@@ -13,23 +13,42 @@ from pdf_processor import (
 
 
 def test_is_numeric_token():
-    """Verify numeric token detector handles various formatting and currency symbols."""
+    """Verify numeric token detector handles various formatting, currencies, and financial notation."""
     # Standard numbers
     assert _is_numeric_token("100") is True
     assert _is_numeric_token("3.14") is True
     assert _is_numeric_token("-42") is True
+    assert _is_numeric_token("+15.8") is True
 
-    # Formatted financial numbers
+    # Formatted financial numbers and global currencies
     assert _is_numeric_token("1,089") is True
     assert _is_numeric_token("8.2%") is True
     assert _is_numeric_token("₹500") is True
+    assert _is_numeric_token("$1,250.50") is True
+    assert _is_numeric_token("€450") is True
+    assert _is_numeric_token("£95.20") is True
+    assert _is_numeric_token("¥10,000") is True
     assert _is_numeric_token("-0.5%") is True
+
+    # Accounting negative notation in parentheses
+    assert _is_numeric_token("(450.25)") is True
+    assert _is_numeric_token("(1,200)") is True
+
+    # Financial magnitude suffixes (South Asian and International)
+    assert _is_numeric_token("12.5bn") is True
+    assert _is_numeric_token("300cr") is True
+    assert _is_numeric_token("50lakh") is True
+    assert _is_numeric_token("25bps") is True
+    assert _is_numeric_token("14.5x") is True
+    assert _is_numeric_token("500M") is True
+    assert _is_numeric_token("250k") is True
 
     # Non-numeric tokens
     assert _is_numeric_token("GDP") is False
     assert _is_numeric_token("growth") is False
     assert _is_numeric_token("FY2024-25") is False
     assert _is_numeric_token("") is False
+    assert _is_numeric_token("   ") is False
 
 
 def test_detect_table_pattern_positive():
@@ -41,6 +60,23 @@ def test_detect_table_pattern_positive():
     2024-25   1600       1750       1720
     """
     assert _detect_table_pattern(tabular_text) is True
+
+
+def test_detect_table_pattern_financial_mix():
+    """Verify table pattern detection with mixed financial figures and currencies."""
+    financial_table = """
+    Metric          FY22        FY23        FY24
+    Revenue         $1,200M     $1,450M     $1,800M
+    EBITDA          $250M       $320M       $410M
+    PAT Margin      12.5%       14.2%       16.0%
+    """
+    assert _detect_table_pattern(financial_table) is True
+
+
+def test_detect_table_pattern_short_text():
+    """Verify table pattern detection returns False for text with fewer than 3 lines."""
+    assert _detect_table_pattern("Single line of text") is False
+    assert _detect_table_pattern("Line 1\nLine 2") is False
 
 
 def test_detect_table_pattern_negative():
@@ -130,5 +166,12 @@ def test_extract_pdf_text_exception_handled():
     """Verify extract_pdf_text catches corrupt PDF read errors gracefully."""
     with patch("os.path.exists", return_value=True), patch("pypdf.PdfReader", side_effect=Exception("Corrupt PDF")):
         result = extract_pdf_text("corrupted_report.pdf")
+    assert result is None
+
+
+def test_extract_pdf_text_import_error():
+    """Verify extract_pdf_text handles missing pypdf dependency gracefully."""
+    with patch.dict("sys.modules", {"pypdf": None}):
+        result = extract_pdf_text("sample.pdf")
     assert result is None
 
