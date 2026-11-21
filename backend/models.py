@@ -2,7 +2,7 @@
 Synaptica — Core Data Models
 Pydantic models for facts, relationships, documents, and the knowledge layer.
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -47,6 +47,49 @@ class Fact(BaseModel):
     context: Context = Context()
     extracted_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
+    @field_validator("page_numbers", mode="before")
+    @classmethod
+    def sanitize_page_numbers(cls, v):
+        if not v:
+            return []
+        if isinstance(v, (int, str)):
+            v = [v]
+        cleaned = []
+        for p in v:
+            try:
+                num = int(p)
+                if num > 0:
+                    cleaned.append(num)
+            except (ValueError, TypeError):
+                continue
+        return sorted(list(set(cleaned)))
+
+    def is_numeric(self) -> bool:
+        """Check if this fact holds an identifiable numeric value."""
+        if not self.value:
+            return False
+        cleaned = self.value.strip().replace(",", "").replace("%", "").replace("$", "").replace("₹", "").replace("€", "").replace("£", "")
+        try:
+            float(cleaned)
+            return True
+        except ValueError:
+            return False
+
+    def formatted_citation(self) -> str:
+        """Produce a clean human-readable document and page citation."""
+        pages = ", ".join(str(p) for p in sorted(set(self.page_numbers)))
+        if self.source_doc_name and pages:
+            return f"{self.source_doc_name} (p. {pages})"
+        if self.source_doc_name:
+            return self.source_doc_name
+        if pages:
+            return f"p. {pages}"
+        return "Unknown Source"
+
+    def has_context(self) -> bool:
+        """Determine if contextual metadata is populated."""
+        return bool(self.context.time_period or self.context.scope or self.context.methodology)
+
 
 class Relationship(BaseModel):
     """A discovered relationship between two facts across documents."""
@@ -58,6 +101,18 @@ class Relationship(BaseModel):
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     reconciliation: Optional[str] = None
     reasoning_trace: Optional[str] = None
+
+    def involves_fact(self, fact_id: str) -> bool:
+        """Check whether this relationship connects to a specific fact ID."""
+        return fact_id in (self.fact_a_id, self.fact_b_id)
+
+    def get_counterpart_id(self, fact_id: str) -> Optional[str]:
+        """Return the other fact ID connected by this relationship, or None if not involved."""
+        if fact_id == self.fact_a_id:
+            return self.fact_b_id
+        if fact_id == self.fact_b_id:
+            return self.fact_a_id
+        return None
 
 
 class Document(BaseModel):
@@ -71,6 +126,10 @@ class Document(BaseModel):
     upload_time: str = Field(default_factory=lambda: datetime.now().isoformat())
     dataset: str = ""  # "india-macroeconomy" or "delhivery"
     description: str = ""
+
+    def is_ready(self) -> bool:
+        """Check whether document processing has completed successfully."""
+        return self.status == DocumentStatus.PROCESSED.value
 
 
 class CaseStudy(BaseModel):

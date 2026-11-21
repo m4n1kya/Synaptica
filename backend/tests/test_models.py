@@ -114,3 +114,65 @@ def test_knowledge_layer_stats():
     assert stats.total_facts == 42
     assert stats.corroborations == 6
     assert stats.avg_confidence == 0.91
+
+
+def test_fact_helper_methods():
+    """Test Fact helper methods: is_numeric, formatted_citation, and has_context."""
+    fact_num = Fact(
+        id="fact_num",
+        statement="Inflation fell to 4.8%",
+        value="4.8%",
+        source_doc_name="RBI Bulletin",
+        page_numbers=[3, 1, 3, -5, 0],
+        context=Context(time_period="FY24", scope="National", methodology="CPI"),
+    )
+    assert fact_num.is_numeric() is True
+    assert fact_num.page_numbers == [1, 3]  # sanitized: positive, unique, sorted
+    assert fact_num.formatted_citation() == "RBI Bulletin (p. 1, 3)"
+    assert fact_num.has_context() is True
+
+    fact_text = Fact(
+        id="fact_text",
+        statement="Monetary policy stance was neutral",
+        value="neutral",
+        source_doc_name="Policy Statement",
+        page_numbers=[],
+    )
+    assert fact_text.is_numeric() is False
+    assert fact_text.formatted_citation() == "Policy Statement"
+    assert fact_text.has_context() is False
+
+    fact_curr = Fact(
+        id="fact_curr",
+        statement="Revenue reached $1,250.50",
+        value="$1,250.50",
+    )
+    assert fact_curr.is_numeric() is True
+    assert fact_curr.formatted_citation() == "Unknown Source"
+
+
+def test_relationship_helper_methods():
+    """Test Relationship helper methods: involves_fact and get_counterpart_id."""
+    rel = Relationship(
+        id="rel_ab",
+        fact_a_id="fact_1",
+        fact_b_id="fact_2",
+        relationship_type="corroborates",
+    )
+    assert rel.involves_fact("fact_1") is True
+    assert rel.involves_fact("fact_2") is True
+    assert rel.involves_fact("fact_3") is False
+
+    assert rel.get_counterpart_id("fact_1") == "fact_2"
+    assert rel.get_counterpart_id("fact_2") == "fact_1"
+    assert rel.get_counterpart_id("fact_3") is None
+
+
+def test_document_is_ready():
+    """Test Document.is_ready() helper method."""
+    doc_done = Document(id="doc_1", filename="a.pdf", status="processed")
+    assert doc_done.is_ready() is True
+
+    doc_pending = Document(id="doc_2", filename="b.pdf", status="parsing")
+    assert doc_pending.is_ready() is False
+
