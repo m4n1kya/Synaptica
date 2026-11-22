@@ -126,6 +126,19 @@ def test_chunk_pages_empty_document():
     assert chunks == []
 
 
+def test_chunk_pages_single_page_chunk_size():
+    """Verify chunk_pages handles chunk_size of 1 without division/zero-step error."""
+    pages = [
+        PageContent(page_number=1, text="Page 1 text", char_count=11),
+        PageContent(page_number=2, text="Page 2 text", char_count=11),
+    ]
+    doc = DocumentContent(filename="sample2.pdf", total_pages=2, pages=pages)
+    chunks = chunk_pages(doc, chunk_size=1)
+    assert len(chunks) == 2
+    assert chunks[0]["page_numbers"] == [1]
+    assert chunks[1]["page_numbers"] == [2]
+
+
 def test_extract_pdf_text_missing_file():
     """Verify extract_pdf_text returns None when target file does not exist."""
     result = extract_pdf_text("non_existent_document_404.pdf")

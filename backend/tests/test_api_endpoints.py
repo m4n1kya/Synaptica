@@ -255,5 +255,118 @@ def test_invalid_bearer_token_fallback():
         assert "total_facts" in data
 
 
+def test_serve_root_endpoint():
+    """Verify GET / returns index.html shell or fallback message."""
+    response = client.get("/")
+    assert response.status_code == 200
+
+
+def test_upload_pdf_extraction_failure():
+    """Verify /api/upload returns 500 when PDF text extraction returns None."""
+    with patch("main.extract_pdf_text", return_value=None):
+        files = {"file": ("corrupted.pdf", b"%PDF-1.4 mock content", "application/pdf")}
+        response = client.post("/api/upload", files=files)
+        assert response.status_code == 500
+        assert response.json().get("error") == "Failed to extract text"
+
+
+def test_upload_pdf_success_mock():
+    """Verify /api/upload extracts facts and returns processed document payload."""
+    from pdf_processor import DocumentContent, PageContent
+    from models import Fact
+
+    mock_content = DocumentContent(
+        filename="test_upload.pdf",
+        total_pages=1,
+        pages=[PageContent(page_number=1, text="Headline GDP grew 8.2% in FY24.")]
+    )
+    mock_fact = Fact(
+        id="f-upload-1",
+        statement="GDP grew 8.2% in FY24",
+        category="Macroeconomics",
+        confidence=0.95,
+        source_doc_name="test_upload.pdf",
+    )
+
+    with patch("main.extract_pdf_text", return_value=mock_content), \
+         patch("main.extract_all_facts", new_callable=AsyncMock, return_value=[mock_fact]), \
+         patch.dict("os.environ", {"GEMINI_API_KEY": "valid_test_key"}):
+
+        files = {"file": ("test_upload.pdf", b"%PDF-1.4 mock content", "application/pdf")}
+        response = client.post("/api/upload", files=files)
+        assert response.status_code == 200
+        data = response.json()
+        assert data.get("status") == "processed"
+        assert data.get("fact_count") == 1
+        assert len(data.get("facts", [])) == 1
+        assert data["facts"][0]["statement"] == "GDP grew 8.2% in FY24"
+
+
+def test_delete_document_authenticated_success_and_not_found():
+    """Verify authenticated users can delete documents or receive 404 when not found."""
+    with patch("firebase_admin.auth.verify_id_token", return_value={"uid": "user_auth_1"}), \
+         patch("main.FirestoreStore") as MockStore:
+
+        mock_instance = MockStore.return_value
+
+        # Case 1: Document deleted successfully
+        mock_instance.delete_document.return_value = True
+        res_ok = client.delete("/api/documents/doc-valid-1", headers={"Authorization": "Bearer token1"})
+        assert res_ok.status_code == 200
+        assert res_ok.json().get("status") == "success"
+
+        # Case 2: Document does not exist
+        mock_instance.delete_document.return_value = False
+        res_404 = client.delete("/api/documents/doc-missing-1", headers={"Authorization": "Bearer token1"})
+        assert res_404.status_code == 404
+        assert res_404.json().get("detail") == "Document not found"
+
+
+def test_get_document_authenticated():
+    """Verify retrieving document detail for authenticated user with FirestoreStore."""
+    with patch("firebase_admin.auth.verify_id_token", return_value={"uid": "user_auth_2"}), \
+         patch("main.FirestoreStore") as MockStore:
+
+        mock_instance = MockStore.return_value
+        doc_mock = MagicMock()
+        doc_mock.exists = True
+        doc_mock.to_dict.return_value = {"id": "doc-u1", "filename": "user_doc.pdf", "page_count": 5}
+
+        mock_instance.user_ref.collection.return_value.document.return_value.get.return_value = doc_mock
+        mock_instance.get_all_facts.return_value = []
+
+        res = client.get("/api/documents/doc-u1", headers={"Authorization": "Bearer token2"})
+        assert res.status_code == 200
+        data = res.json()
+        assert data["document"]["id"] == "doc-u1"
+
+        # Test document not found
+        doc_mock.exists = False
+        res_404 = client.get("/api/documents/doc-u1", headers={"Authorization": "Bearer token2"})
+        assert res_404.status_code == 404
+
+
+def test_stats_and_cases_authenticated():
+    """Verify /api/stats and /api/cases return expected data when user is authenticated."""
+    with patch("firebase_admin.auth.verify_id_token", return_value={"uid": "user_auth_3"}), \
+         patch("main.FirestoreStore") as MockStore:
+
+        mock_instance = MockStore.return_value
+        mock_instance.get_all_documents.return_value = [MagicMock()]
+        mock_instance.get_all_facts.return_value = [MagicMock(), MagicMock()]
+        mock_instance.get_relationships.return_value = []
+
+        res_stats = client.get("/api/stats", headers={"Authorization": "Bearer token3"})
+        assert res_stats.status_code == 200
+        stats = res_stats.json()
+        assert stats["documents"] == 1
+        assert stats["facts"] == 2
+
+        res_cases = client.get("/api/cases", headers={"Authorization": "Bearer token3"})
+        assert res_cases.status_code == 200
+        assert res_cases.json() == []
+
+
+
 
 

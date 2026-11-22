@@ -131,8 +131,9 @@ def chunk_pages(content: DocumentContent, chunk_size: int = 3) -> List[dict]:
     """
     chunks = []
     pages = content.pages
+    step = max(1, chunk_size - 1)
     
-    for i in range(0, len(pages), chunk_size - 1):  # Overlap by 1 page
+    for i in range(0, len(pages), step):  # Overlap by 1 page
         chunk_pages = pages[i:i + chunk_size]
         if not chunk_pages:
             continue
