@@ -11,7 +11,7 @@ pypdf==5.0.1
 aiofiles==24.1.0
 
 # AI Services
-google-genai==1.10.0
+google-genai==2.30.1
 
 # Database
 firebase-admin==6.5.0
