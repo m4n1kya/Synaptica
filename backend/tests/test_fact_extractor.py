@@ -319,4 +319,19 @@ def test_extract_facts_from_chunk_all_retries_fail():
     assert mock_sleep.call_count == 3
 
 
+def test_extract_facts_from_chunk_empty_safe_text():
+    """Verify extract_facts_from_chunk returns empty list when _safe_response_text yields None."""
+    chunk = {"text": "A" * 100, "page_numbers": [1]}
+
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock()
+
+    with patch("google.genai.Client", return_value=mock_client), \
+         patch("fact_extractor._safe_response_text", return_value=None):
+        facts = asyncio.run(extract_facts_from_chunk(chunk, "doc1", "doc1.pdf", api_key="dummy_key"))
+
+    assert facts == []
+
+
+
 

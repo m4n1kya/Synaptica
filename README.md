@@ -174,7 +174,7 @@ FastAPI serves both the REST API and the static frontend locally:
 
 ### 4. Running Automated Tests & Coverage
 
-Execute the automated test suite (111 tests) across all API contracts, Pydantic models, and ML pipelines:
+Execute the automated test suite (122 tests) across all API contracts, Pydantic models, and ML pipelines:
 
 ```bash
 # Run all tests using pyproject.toml configuration

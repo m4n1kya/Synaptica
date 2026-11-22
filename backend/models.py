@@ -90,6 +90,11 @@ class Fact(BaseModel):
         """Determine if contextual metadata is populated."""
         return bool(self.context.time_period or self.context.scope or self.context.methodology)
 
+    @property
+    def confidence_percentage(self) -> float:
+        """Return confidence as a percentage float rounded to 1 decimal place."""
+        return round(self.confidence * 100, 1)
+
 
 class Relationship(BaseModel):
     """A discovered relationship between two facts across documents."""
@@ -101,6 +106,15 @@ class Relationship(BaseModel):
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     reconciliation: Optional[str] = None
     reasoning_trace: Optional[str] = None
+
+    @property
+    def confidence_percentage(self) -> float:
+        """Return confidence as a percentage float rounded to 1 decimal place."""
+        return round(self.confidence * 100, 1)
+
+    def is_cross_document(self, fact_a: "Fact", fact_b: "Fact") -> bool:
+        """Verify whether the linked facts originate from distinct source documents."""
+        return fact_a.source_doc_id != fact_b.source_doc_id
 
     def involves_fact(self, fact_id: str) -> bool:
         """Check whether this relationship connects to a specific fact ID."""

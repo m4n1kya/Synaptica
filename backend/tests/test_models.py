@@ -176,3 +176,37 @@ def test_document_is_ready():
     doc_pending = Document(id="doc_2", filename="b.pdf", status="parsing")
     assert doc_pending.is_ready() is False
 
+
+def test_fact_page_numbers_sanitization_scalar_and_invalid():
+    """Test page_numbers sanitization with scalar values and mixed non-integer inputs."""
+    fact_scalar_int = Fact(id="f_s1", statement="Scalar int page", page_numbers=5)
+    assert fact_scalar_int.page_numbers == [5]
+
+    fact_scalar_str = Fact(id="f_s2", statement="Scalar str page", page_numbers="12")
+    assert fact_scalar_str.page_numbers == [12]
+
+    fact_mixed = Fact(id="f_s3", statement="Mixed invalid", page_numbers=["1", "invalid_page", None, -2, 7])
+    assert fact_mixed.page_numbers == [1, 7]
+
+
+def test_fact_citation_pages_only():
+    """Test formatted_citation when source_doc_name is empty but page numbers exist."""
+    fact = Fact(id="f_p", statement="Only pages", source_doc_name="", page_numbers=[4, 2])
+    assert fact.formatted_citation() == "p. 2, 4"
+
+
+def test_confidence_percentage_and_cross_document():
+    """Test confidence_percentage property and is_cross_document relationship check."""
+    f1 = Fact(id="f1", statement="Claim 1", confidence=0.854, source_doc_id="doc_a")
+    f2 = Fact(id="f2", statement="Claim 2", confidence=0.927, source_doc_id="doc_b")
+    f3 = Fact(id="f3", statement="Claim 3", confidence=0.75, source_doc_id="doc_a")
+
+    assert f1.confidence_percentage == 85.4
+    assert f2.confidence_percentage == 92.7
+
+    rel = Relationship(id="r1", fact_a_id="f1", fact_b_id="f2", relationship_type="corroborates", confidence=0.916)
+    assert rel.confidence_percentage == 91.6
+    assert rel.is_cross_document(f1, f2) is True
+    assert rel.is_cross_document(f1, f3) is False
+
+
