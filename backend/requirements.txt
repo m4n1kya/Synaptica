@@ -8,7 +8,7 @@ pydantic==2.9.0
 
 # Document Parsing
 pypdf==5.0.1
-aiofiles==24.1.0
+aiofiles==25.1.0
 
 # AI Services
 google-genai==1.10.0
