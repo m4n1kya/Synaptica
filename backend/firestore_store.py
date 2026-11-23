@@ -1,6 +1,6 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
-from typing import List, Optional
+from typing import List, Optional, Dict
 from models import Fact, Relationship, Document, CaseStudy
 import os
 import json
@@ -115,3 +115,10 @@ class FirestoreStore:
     def get_cases(self) -> List[CaseStudy]:
         # Return empty list as cases are not currently generated per user
         return []
+
+    def get_category_distribution(self) -> Dict[str, int]:
+        """Return fact counts grouped by category for the authenticated user."""
+        counts: Dict[str, int] = {}
+        for f in self.get_all_facts():
+            counts[f.category] = counts.get(f.category, 0) + 1
+        return dict(sorted(counts.items(), key=lambda x: -x[1]))

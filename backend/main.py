@@ -321,11 +321,8 @@ async def get_fact_detail(fact_id: str, user_id: Optional[str] = Depends(get_opt
 async def list_categories(user_id: Optional[str] = Depends(get_optional_user)) -> List[Dict[str, Any]]:
     """Retrieve fact distribution count grouped by category."""
     store = FirestoreStore(user_id) if user_id else demo_store
-    facts = store.get_all_facts()
-    categories = {}
-    for f in facts:
-        categories[f.category] = categories.get(f.category, 0) + 1
-    return [{"name": k, "count": v} for k, v in sorted(categories.items(), key=lambda x: -x[1])]
+    counts = store.get_category_distribution()
+    return [{"name": k, "count": v} for k, v in counts.items()]
 
 # -- Relationships ----------------------------------------------------------
 

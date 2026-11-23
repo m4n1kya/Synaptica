@@ -129,13 +129,17 @@ class KnowledgeStore:
                 related_facts.append({"fact": other_fact, "relationship": r})
         return {"fact": fact, "related": related_facts}
 
+    def get_category_distribution(self) -> Dict[str, int]:
+        """Return the count of facts grouped by category in descending order of frequency."""
+        counts: Dict[str, int] = {}
+        for f in self.facts.values():
+            counts[f.category] = counts.get(f.category, 0) + 1
+        return dict(sorted(counts.items(), key=lambda x: -x[1]))
+
     def get_stats(self) -> KnowledgeLayerStats:
         rels = list(self.relationships.values())
-        categories = {}
-        total_conf = 0.0
-        for f in self.facts.values():
-            categories[f.category] = categories.get(f.category, 0) + 1
-            total_conf += f.confidence
+        categories = self.get_category_distribution()
+        total_conf = sum(f.confidence for f in self.facts.values())
 
         n_facts = len(self.facts)
         return KnowledgeLayerStats(

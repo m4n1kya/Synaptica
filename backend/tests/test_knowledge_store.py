@@ -241,3 +241,16 @@ def test_knowledge_store_get_all_documents_dataset_filtering():
 
     assert store.get_all_documents(dataset="unknown") == []
 
+
+def test_knowledge_store_category_distribution():
+    """Verify get_category_distribution aggregates and orders categories by frequency."""
+    store = KnowledgeStore(load_demo=False)
+    store.add_fact(Fact(id="f1", statement="S1", category="Macroeconomics"))
+    store.add_fact(Fact(id="f2", statement="S2", category="Inflation"))
+    store.add_fact(Fact(id="f3", statement="S3", category="Macroeconomics"))
+
+    dist = store.get_category_distribution()
+    assert dist == {"Macroeconomics": 2, "Inflation": 1}
+    assert list(dist.keys())[0] == "Macroeconomics"
+
+

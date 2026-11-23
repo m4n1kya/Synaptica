@@ -222,3 +222,23 @@ def test_firestore_store_get_relationships_filtered(mock_get_db):
     assert rels[0].id == "rel_stream_1"
     assert rels[0].relationship_type == "contradicts"
 
+
+@patch("firestore_store.get_db")
+def test_firestore_store_get_category_distribution(mock_get_db):
+    """Verify FirestoreStore.get_category_distribution correctly aggregates categories."""
+    mock_db = MagicMock()
+    mock_get_db.return_value = mock_db
+
+    from firestore_store import FirestoreStore
+    from models import Fact
+    store = FirestoreStore("user_cat_test")
+    f1 = Fact(id="f1", statement="Fact 1", category="Economy")
+    f2 = Fact(id="f2", statement="Fact 2", category="Economy")
+    f3 = Fact(id="f3", statement="Fact 3", category="Logistics")
+
+    with patch.object(store, "get_all_facts", return_value=[f1, f2, f3]):
+        dist = store.get_category_distribution()
+
+    assert dist == {"Economy": 2, "Logistics": 1}
+
+
