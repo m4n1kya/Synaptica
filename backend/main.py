@@ -128,6 +128,47 @@ async def get_stats(user_id: Optional[str] = Depends(get_optional_user)) -> Dict
         "cases": 0
     }
 
+@app.get("/api/stats/summary")
+async def get_stats_summary(user_id: Optional[str] = Depends(get_optional_user)) -> Dict[str, Any]:
+    """Retrieve detailed telemetry summary including category distribution and relationship type breakdown."""
+    if not user_id:
+        stats = demo_store.get_stats()
+        return {
+            "status": "ok",
+            "total_documents": stats.total_documents,
+            "total_facts": stats.total_facts,
+            "total_relationships": stats.total_relationships,
+            "avg_confidence": stats.avg_confidence,
+            "relationship_breakdown": {
+                "corroborations": stats.corroborations,
+                "contradictions": stats.contradictions,
+                "contextual_differences": stats.contextual_differences,
+                "extraction_failures": stats.extraction_failures,
+            },
+            "category_distribution": stats.categories,
+        }
+    store = FirestoreStore(user_id)
+    rels = store.get_relationships()
+    facts = store.get_all_facts()
+    docs = store.get_all_documents()
+    categories = store.get_category_distribution()
+    avg_conf = round(sum(f.confidence for f in facts) / len(facts), 3) if facts else 0.0
+
+    return {
+        "status": "ok",
+        "total_documents": len(docs),
+        "total_facts": len(facts),
+        "total_relationships": len(rels),
+        "avg_confidence": avg_conf,
+        "relationship_breakdown": {
+            "corroborations": sum(1 for r in rels if r.relationship_type == "corroborates"),
+            "contradictions": sum(1 for r in rels if r.relationship_type == "contradicts"),
+            "contextual_differences": sum(1 for r in rels if r.relationship_type == "contextual_difference"),
+            "extraction_failures": sum(1 for r in rels if r.relationship_type == "extraction_failure"),
+        },
+        "category_distribution": categories,
+    }
+
 # -- Documents --------------------------------------------------------------
 
 @app.get("/api/documents")

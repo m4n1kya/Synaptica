@@ -44,6 +44,21 @@ def test_stats_endpoint():
     assert data["total_documents"] >= 0
 
 
+def test_stats_summary_endpoint():
+    """Verify /api/stats/summary returns detailed breakdown of relationships and categories."""
+    response = client.get("/api/stats/summary")
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("status") == "ok"
+    assert "total_documents" in data
+    assert "total_facts" in data
+    assert "total_relationships" in data
+    assert "relationship_breakdown" in data
+    assert "category_distribution" in data
+    assert "corroborations" in data["relationship_breakdown"]
+    assert "contradictions" in data["relationship_breakdown"]
+
+
 def test_documents_endpoint():
     """Verify /api/documents returns an array of ingested document summaries."""
     response = client.get("/api/documents")
@@ -383,12 +398,21 @@ def test_stats_and_cases_authenticated():
         mock_instance.get_all_documents.return_value = [MagicMock()]
         mock_instance.get_all_facts.return_value = [MagicMock(), MagicMock()]
         mock_instance.get_relationships.return_value = []
+        mock_instance.get_category_distribution.return_value = {"Economy": 2}
 
         res_stats = client.get("/api/stats", headers={"Authorization": "Bearer token3"})
         assert res_stats.status_code == 200
         stats = res_stats.json()
         assert stats["documents"] == 1
         assert stats["facts"] == 2
+
+        res_summary = client.get("/api/stats/summary", headers={"Authorization": "Bearer token3"})
+        assert res_summary.status_code == 200
+        summary = res_summary.json()
+        assert summary["status"] == "ok"
+        assert summary["total_documents"] == 1
+        assert summary["total_facts"] == 2
+        assert "category_distribution" in summary
 
         res_cases = client.get("/api/cases", headers={"Authorization": "Bearer token3"})
         assert res_cases.status_code == 200
