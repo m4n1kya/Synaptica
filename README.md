@@ -174,7 +174,7 @@ FastAPI serves both the REST API and the static frontend locally:
 
 ### 4. Running Automated Tests & Coverage
 
-Execute the automated test suite (122 tests) across all API contracts, Pydantic models, and ML pipelines:
+Execute the automated test suite (132 tests) across all API contracts, Pydantic models, and ML pipelines:
 
 ```bash
 # Run all tests using pyproject.toml configuration
@@ -195,11 +195,12 @@ pytest --cov=backend --cov-report=term-missing
 | `GET` | `/api/debug/env` | Public | Inspect masked status of runtime environment variables |
 | `GET` | `/api/debug/gemini` | Public | Verify Gemini API connectivity and generation |
 | `GET` | `/api/stats` | Optional | Aggregated counts of documents, facts, categories, and relationships |
+| `GET` | `/api/stats/summary` | Optional | Detailed telemetry summary with relationship breakdown and category counts |
 | `GET` | `/api/documents` | Optional | List all ingested documents with optional `dataset` filtering (returns demo dataset if unauthenticated) |
 | `GET` | `/api/documents/{doc_id}` | Optional | Retrieve detailed document metadata and extracted atomic facts |
 | `DELETE` | `/api/documents/{doc_id}` | Required | Delete a document and cascade-remove its facts and relationships |
 | `POST` | `/api/upload` | Optional | Upload a PDF, extract atomic facts via Gemini, and compute relationships |
-| `GET` | `/api/facts` | Optional | Query facts with optional `category`, `doc_id`, `min_confidence`, `search`, `limit`, and `offset` |
+| `GET` | `/api/facts` | Optional | Query facts with optional `category`, `doc_id`, `min_confidence`, `search`, `sort_by`, `order`, `limit`, and `offset` |
 | `GET` | `/api/facts/{fact_id}` | Optional | Retrieve a specific fact with its linked cross-document relationships |
 | `GET` | `/api/categories` | Optional | Retrieve fact distribution counts grouped by category |
 | `GET` | `/api/relationships` | Optional | Query cross-document relationships with optional `relationship_type`, `limit`, and `offset` |

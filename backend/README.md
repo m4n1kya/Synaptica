@@ -15,7 +15,7 @@ backend/
 ├── knowledge_store.py   # In-memory store for fallback & static dataset generation
 ├── demo_data.py         # Pre-verified macroeconomic & corporate financial datasets
 ├── requirements.txt     # Pinned production dependencies
-└── tests/               # Comprehensive automated test suite (122 unit & contract tests, 90%+ coverage)
+└── tests/               # Comprehensive automated test suite (132 unit & contract tests, 90%+ coverage)
     ├── test_api_endpoints.py    # REST API contracts, status codes, query filtering & error handling
     ├── test_demo_data.py        # Dataset referential integrity and case study constraints
     ├── test_fact_extractor.py   # JSON repair, code fence stripping, and safety fallbacks
