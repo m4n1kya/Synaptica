@@ -95,6 +95,27 @@ class Fact(BaseModel):
         """Return confidence as a percentage float rounded to 1 decimal place."""
         return round(self.confidence * 100, 1)
 
+    def is_equivalent(self, other: "Fact") -> bool:
+        """Check if two facts assert identical claims based on normalized statement or value/unit in the same category."""
+        if not isinstance(other, Fact):
+            return False
+        if self.statement.strip().lower() == other.statement.strip().lower():
+            return True
+        if (self.category.strip().lower() == other.category.strip().lower() and
+            self.value and other.value and
+            self.value.strip() == other.value.strip() and
+            (self.unit or "").strip().lower() == (other.unit or "").strip().lower()):
+            return True
+        return False
+
+    def to_export_dict(self) -> dict:
+        """Serialize fact with computed presentation fields (citation, confidence percentage)."""
+        data = self.model_dump()
+        data["citation"] = self.formatted_citation()
+        data["confidence_percentage"] = self.confidence_percentage
+        data["is_numeric"] = self.is_numeric()
+        return data
+
 
 class Relationship(BaseModel):
     """A discovered relationship between two facts across documents."""
@@ -157,6 +178,10 @@ class CaseStudy(BaseModel):
     relationships: List[Relationship] = []
     evidence_analysis: str = ""
     system_reasoning: str = ""
+
+    def summary_brief(self) -> str:
+        """Return a formatted title and case type summary."""
+        return f"[{self.case_type.upper()}] {self.title}"
 
 
 class KnowledgeLayerStats(BaseModel):

@@ -10,6 +10,7 @@ from models import (
     DocumentStatus,
     Context,
     Document,
+    CaseStudy,
     KnowledgeLayerStats,
 )
 
@@ -208,5 +209,30 @@ def test_confidence_percentage_and_cross_document():
     assert rel.confidence_percentage == 91.6
     assert rel.is_cross_document(f1, f2) is True
     assert rel.is_cross_document(f1, f3) is False
+
+
+def test_fact_is_equivalent_and_export_dict():
+    """Verify is_equivalent checks statement/metric alignment and to_export_dict serializes presentation fields."""
+    f1 = Fact(id="f1", statement="Real GDP grew by 8.2%", value="8.2", unit="%", category="Macroeconomics", confidence=0.95, page_numbers=[12], source_doc_name="Doc1")
+    f2 = Fact(id="f2", statement="real gdp grew by 8.2% ", value="8.2", unit="%", category="Macroeconomics", confidence=0.9)
+    f3 = Fact(id="f3", statement="Different phrasing", value="8.2", unit="%", category="Macroeconomics", confidence=0.92)
+    f4 = Fact(id="f4", statement="Inflation reached 5%", value="5.0", unit="%", category="Inflation", confidence=0.88)
+
+    assert f1.is_equivalent(f2) is True
+    assert f1.is_equivalent(f3) is True
+    assert f1.is_equivalent(f4) is False
+    assert f1.is_equivalent("not a fact") is False
+
+    export = f1.to_export_dict()
+    assert export["citation"] == "Doc1 (p. 12)"
+    assert export["confidence_percentage"] == 95.0
+    assert export["is_numeric"] is True
+
+
+def test_case_study_summary_brief():
+    """Verify CaseStudy.summary_brief formatting."""
+    case = CaseStudy(id="c1", title="GDP Growth Validation", case_type="corroboration")
+    assert case.summary_brief() == "[CORROBORATION] GDP Growth Validation"
+
 
 
