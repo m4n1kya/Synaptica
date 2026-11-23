@@ -262,16 +262,26 @@ async def list_facts(
     doc_id: Optional[str] = Query(None, description="Filter by source document ID"),
     min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score"),
     search: Optional[str] = Query(None, description="Case-insensitive text search"),
+    sort_by: Optional[str] = Query(None, description="Field to sort facts by (confidence, category, extracted_at)"),
+    order: str = Query("desc", description="Sort order: 'asc' or 'desc'"),
     limit: Optional[int] = Query(None, ge=1, le=500, description="Max results limit"),
     offset: int = Query(0, ge=0, description="Number of items to skip"),
     user_id: Optional[str] = Depends(get_optional_user)
 ) -> List[Dict[str, Any]]:
-    """Query extracted facts with optional filters for category, document, search text, and pagination."""
+    """Query extracted facts with optional filters for category, document, search text, sorting, and pagination."""
     store = FirestoreStore(user_id) if user_id else demo_store
     facts = store.get_all_facts(category=category, doc_id=doc_id, min_confidence=min_confidence)
     if search:
         s_lower = search.lower()
         facts = [f for f in facts if s_lower in f.statement.lower() or s_lower in f.evidence_text.lower()]
+    if sort_by:
+        reverse = (order.lower() != "asc")
+        if sort_by == "confidence":
+            facts = sorted(facts, key=lambda f: f.confidence, reverse=reverse)
+        elif sort_by == "category":
+            facts = sorted(facts, key=lambda f: f.category.lower(), reverse=reverse)
+        elif sort_by == "extracted_at":
+            facts = sorted(facts, key=lambda f: f.extracted_at, reverse=reverse)
     if offset > 0:
         facts = facts[offset:]
     if limit is not None:

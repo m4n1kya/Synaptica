@@ -178,6 +178,34 @@ def test_facts_text_search():
         assert "gdp" in searchable
 
 
+def test_facts_sorting_confidence():
+    """Verify /api/facts sorts facts by confidence in ascending and descending order."""
+    res_desc = client.get("/api/facts?sort_by=confidence&order=desc&limit=10")
+    assert res_desc.status_code == 200
+    facts_desc = res_desc.json()
+    assert len(facts_desc) >= 2
+    for i in range(len(facts_desc) - 1):
+        assert facts_desc[i]["confidence"] >= facts_desc[i + 1]["confidence"]
+
+    res_asc = client.get("/api/facts?sort_by=confidence&order=asc&limit=10")
+    assert res_asc.status_code == 200
+    facts_asc = res_asc.json()
+    assert len(facts_asc) >= 2
+    for i in range(len(facts_asc) - 1):
+        assert facts_asc[i]["confidence"] <= facts_asc[i + 1]["confidence"]
+
+
+def test_facts_sorting_category():
+    """Verify /api/facts sorts facts by category alphabetically."""
+    res_cat = client.get("/api/facts?sort_by=category&order=asc&limit=15")
+    assert res_cat.status_code == 200
+    facts_cat = res_cat.json()
+    assert len(facts_cat) >= 2
+    for i in range(len(facts_cat) - 1):
+        assert facts_cat[i]["category"].lower() <= facts_cat[i + 1]["category"].lower()
+
+
+
 def test_relationships_filtered_by_type():
     """Verify /api/relationships filters by relationship_type."""
     res_corroborates = client.get("/api/relationships?relationship_type=corroborates")
