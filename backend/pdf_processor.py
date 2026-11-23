@@ -16,6 +16,7 @@ class PageContent:
     page_number: int
     text: str
     char_count: int = 0
+    word_count: int = 0
     has_tables: bool = False
     has_images: bool = False
 
@@ -27,6 +28,16 @@ class DocumentContent:
     total_pages: int
     pages: List[PageContent] = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
+
+    @property
+    def total_words(self) -> int:
+        """Sum of words across all extracted pages."""
+        return sum(p.word_count for p in self.pages)
+
+    @property
+    def total_characters(self) -> int:
+        """Sum of characters across all extracted pages."""
+        return sum(p.char_count for p in self.pages)
 
 
 def extract_pdf_text(filepath: str) -> Optional[DocumentContent]:
@@ -68,10 +79,12 @@ def extract_pdf_text(filepath: str) -> Optional[DocumentContent]:
             # Detect if page has images (pypdf has page.images)
             has_images = len(page.images) > 0 if hasattr(page, 'images') else False
 
+            cleaned = text.strip()
             content.pages.append(PageContent(
                 page_number=i + 1,  # 1-indexed
-                text=text.strip(),
-                char_count=len(text),
+                text=cleaned,
+                char_count=len(cleaned),
+                word_count=len(cleaned.split()) if cleaned else 0,
                 has_tables=has_tables,
                 has_images=has_images
             ))
@@ -148,6 +161,7 @@ def chunk_pages(content: DocumentContent, chunk_size: int = 3) -> List[dict]:
             "page_numbers": [p.page_number for p in chunk_pages],
             "has_tables": any(p.has_tables for p in chunk_pages),
             "char_count": sum(p.char_count for p in chunk_pages),
+            "word_count": sum(p.word_count for p in chunk_pages),
         })
     
     return chunks

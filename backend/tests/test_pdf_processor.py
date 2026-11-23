@@ -188,3 +188,19 @@ def test_extract_pdf_text_import_error():
         result = extract_pdf_text("sample.pdf")
     assert result is None
 
+
+def test_document_content_word_and_char_aggregations():
+    """Verify DocumentContent total_words and total_characters properties."""
+    p1 = PageContent(page_number=1, text="India's economy is resilient", char_count=28, word_count=4)
+    p2 = PageContent(page_number=2, text="Growth projected at 7%", char_count=22, word_count=4)
+    doc = DocumentContent(filename="econ.pdf", total_pages=2, pages=[p1, p2])
+
+    assert doc.total_words == 8
+    assert doc.total_characters == 50
+
+    chunks = chunk_pages(doc, chunk_size=2)
+    assert len(chunks) == 2
+    assert chunks[0]["word_count"] == 8
+    assert chunks[1]["word_count"] == 4
+
+
