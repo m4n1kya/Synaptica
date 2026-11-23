@@ -10,6 +10,8 @@ from fact_linker import (
     classify_relationship,
     link_all_facts,
     link_incremental,
+    get_canonical_pair_key,
+    filter_relationships_by_threshold,
 )
 
 
@@ -339,6 +341,34 @@ def test_link_incremental_exception_handled():
         relationships = asyncio.run(link_incremental([new_fact], [existing_fact], api_key="test_key"))
 
     assert relationships == []
+
+
+def test_get_canonical_pair_key():
+    """Verify get_canonical_pair_key produces deterministic order-independent keys."""
+    f1 = Fact(id="fact_001", statement="S1")
+    f2 = Fact(id="fact_002", statement="S2")
+
+    key1 = get_canonical_pair_key(f1, f2)
+    key2 = get_canonical_pair_key(f2, f1)
+
+    assert key1 == ("fact_001", "fact_002")
+    assert key1 == key2
+
+
+def test_filter_relationships_by_threshold():
+    """Verify filter_relationships_by_threshold filters correctly by confidence."""
+    r_high = Relationship(id="r1", fact_a_id="a", fact_b_id="b", relationship_type="corroborates", confidence=0.85)
+    r_mid = Relationship(id="r2", fact_a_id="a", fact_b_id="c", relationship_type="contradicts", confidence=0.60)
+    r_low = Relationship(id="r3", fact_a_id="b", fact_b_id="c", relationship_type="contextual_difference", confidence=0.35)
+
+    filtered = filter_relationships_by_threshold([r_high, r_mid, r_low], min_confidence=0.5)
+    assert len(filtered) == 2
+    assert [r.id for r in filtered] == ["r1", "r2"]
+
+    strict = filter_relationships_by_threshold([r_high, r_mid, r_low], min_confidence=0.8)
+    assert len(strict) == 1
+    assert strict[0].id == "r1"
+
 
 
 

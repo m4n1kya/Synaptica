@@ -48,6 +48,19 @@ Return a JSON object with:
 Return ONLY valid JSON."""
 
 
+def get_canonical_pair_key(fact_a: Fact, fact_b: Fact) -> Tuple[str, str]:
+    """Generate an order-independent canonical key for a pair of facts."""
+    return (fact_a.id, fact_b.id) if fact_a.id <= fact_b.id else (fact_b.id, fact_a.id)
+
+
+def filter_relationships_by_threshold(
+    relationships: List[Relationship],
+    min_confidence: float = 0.5
+) -> List[Relationship]:
+    """Filter relationships meeting or exceeding a minimum confidence score threshold."""
+    return [r for r in relationships if r.confidence >= min_confidence]
+
+
 def find_candidate_pairs(facts: List[Fact]) -> List[Tuple[Fact, Fact]]:
     """Find fact pairs that are likely related based on category and value matching."""
     pairs = []
@@ -165,19 +178,25 @@ async def link_all_facts(
 def find_candidate_pairs_incremental(new_facts: List[Fact], existing_facts: List[Fact]) -> List[Tuple[Fact, Fact]]:
     """Find fact pairs between new facts and existing facts."""
     pairs = []
+    seen = set()
     for fact_a in new_facts:
         for fact_b in existing_facts:
             # Only compare facts from different documents
             if fact_a.source_doc_id == fact_b.source_doc_id:
                 continue
+            pair_key = get_canonical_pair_key(fact_a, fact_b)
+            if pair_key in seen:
+                continue
             # Check if categories match or overlap
             if fact_a.category == fact_b.category:
                 pairs.append((fact_a, fact_b))
+                seen.add(pair_key)
             # Check for value overlap (same numeric value)
             elif (fact_a.value and fact_b.value and 
                   fact_a.value == fact_b.value and 
                   fact_a.unit == fact_b.unit):
                 pairs.append((fact_a, fact_b))
+                seen.add(pair_key)
     return pairs
 
 
