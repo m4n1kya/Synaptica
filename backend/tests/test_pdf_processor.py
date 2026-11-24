@@ -9,6 +9,7 @@ from pdf_processor import (
     _detect_table_pattern,
     chunk_pages,
     extract_pdf_text,
+    format_pdf_date,
 )
 
 
@@ -202,5 +203,37 @@ def test_document_content_word_and_char_aggregations():
     assert len(chunks) == 2
     assert chunks[0]["word_count"] == 8
     assert chunks[1]["word_count"] == 4
+
+
+def test_extract_pdf_text_dates_and_formatting():
+    """Verify format_pdf_date parser and date metadata extraction in extract_pdf_text."""
+    # Test date formatting helper directly
+    assert format_pdf_date("D:20240315143000Z") == "2024-03-15"
+    assert format_pdf_date("2023-11-20") == "2023-11-20"
+    assert format_pdf_date("") == ""
+    assert format_pdf_date(None) == ""
+
+    # Test PDF extraction with creation and modification dates
+    mock_page = MagicMock()
+    mock_page.extract_text.return_value = "Page content without tables."
+    mock_page.images = []
+
+    mock_reader = MagicMock()
+    mock_reader.pages = [mock_page]
+    mock_reader.metadata = {
+        "/Title": "Fiscal Deficit Review",
+        "/Author": "RBI",
+        "/CreationDate": "D:20240210100000Z",
+        "/ModDate": "D:20240212110000Z",
+    }
+
+    with patch("os.path.exists", return_value=True), patch("pypdf.PdfReader", return_value=mock_reader):
+        content = extract_pdf_text("fiscal_review.pdf")
+
+    assert content is not None
+    assert content.metadata["title"] == "Fiscal Deficit Review"
+    assert content.metadata["creation_date"] == "2024-02-10"
+    assert content.metadata["modification_date"] == "2024-02-12"
+
 
 

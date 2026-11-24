@@ -40,6 +40,18 @@ class DocumentContent:
         return sum(p.char_count for p in self.pages)
 
 
+def format_pdf_date(date_str: str) -> str:
+    """Format PDF date string like 'D:20240115120000Z' into standard 'YYYY-MM-DD'."""
+    if not date_str:
+        return ""
+    cleaned = date_str.strip()
+    if cleaned.startswith("D:"):
+        cleaned = cleaned[2:]
+    if len(cleaned) >= 8 and cleaned[:8].isdigit():
+        return f"{cleaned[:4]}-{cleaned[4:6]}-{cleaned[6:8]}"
+    return cleaned
+
+
 def extract_pdf_text(filepath: str) -> Optional[DocumentContent]:
     """
     Extract text from a PDF file using pypdf.
@@ -58,6 +70,8 @@ def extract_pdf_text(filepath: str) -> Optional[DocumentContent]:
     try:
         reader = PdfReader(filepath)
         meta = reader.metadata or {}
+        raw_creation = str(meta.get("/CreationDate", "") or "")
+        raw_mod = str(meta.get("/ModDate", "") or "")
         
         content = DocumentContent(
             filename=os.path.basename(filepath),
@@ -67,6 +81,8 @@ def extract_pdf_text(filepath: str) -> Optional[DocumentContent]:
                 "author": meta.get("/Author", ""),
                 "subject": meta.get("/Subject", ""),
                 "creator": meta.get("/Creator", ""),
+                "creation_date": format_pdf_date(raw_creation),
+                "modification_date": format_pdf_date(raw_mod),
             }
         )
 
