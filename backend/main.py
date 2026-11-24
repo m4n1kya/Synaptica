@@ -160,12 +160,7 @@ async def get_stats_summary(user_id: Optional[str] = Depends(get_optional_user))
         "total_facts": len(facts),
         "total_relationships": len(rels),
         "avg_confidence": avg_conf,
-        "relationship_breakdown": {
-            "corroborations": sum(1 for r in rels if r.relationship_type == "corroborates"),
-            "contradictions": sum(1 for r in rels if r.relationship_type == "contradicts"),
-            "contextual_differences": sum(1 for r in rels if r.relationship_type == "contextual_difference"),
-            "extraction_failures": sum(1 for r in rels if r.relationship_type == "extraction_failure"),
-        },
+        "relationship_breakdown": store.get_relationship_type_counts(),
         "category_distribution": categories,
     }
 
@@ -202,6 +197,45 @@ async def get_document(doc_id: str, user_id: Optional[str] = Depends(get_optiona
     return {
         "document": doc_dict,
         "facts": [f.model_dump() for f in facts]
+    }
+
+
+@app.get("/api/documents/{doc_id}/relationships")
+async def get_document_relationships(doc_id: str, user_id: Optional[str] = Depends(get_optional_user)) -> Dict[str, Any]:
+    """Retrieve all cross-document relationships involving facts extracted from a specific document."""
+    if user_id:
+        store = FirestoreStore(user_id)
+        doc_ref = store.user_ref.collection('documents').document(doc_id).get()
+        if not doc_ref.exists:
+            raise HTTPException(status_code=404, detail="Document not found")
+        doc_facts = store.get_all_facts(doc_id=doc_id)
+        all_rels = store.get_relationships()
+        all_facts = {f.id: f for f in store.get_all_facts()}
+    else:
+        doc = demo_store.documents.get(doc_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+        doc_facts = demo_store.get_all_facts(doc_id=doc_id)
+        all_rels = demo_store.get_relationships()
+        all_facts = demo_store.facts
+
+    doc_fact_ids = {f.id for f in doc_facts}
+    matching_rels = [r for r in all_rels if r.fact_a_id in doc_fact_ids or r.fact_b_id in doc_fact_ids]
+
+    enriched = []
+    for rel in matching_rels:
+        fact_a = all_facts.get(rel.fact_a_id)
+        fact_b = all_facts.get(rel.fact_b_id)
+        enriched.append({
+            "relationship": rel.model_dump(),
+            "fact_a": fact_a.model_dump() if fact_a else None,
+            "fact_b": fact_b.model_dump() if fact_b else None,
+        })
+
+    return {
+        "doc_id": doc_id,
+        "total_relationships": len(enriched),
+        "relationships": enriched,
     }
 
 

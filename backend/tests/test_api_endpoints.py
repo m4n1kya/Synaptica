@@ -147,6 +147,25 @@ def test_get_document_detail_not_found():
     assert data.get("detail") == "Document not found"
 
 
+def test_get_document_relationships_success_and_not_found():
+    """Verify /api/documents/{doc_id}/relationships returns cross-document relationships or 404."""
+    response = client.get("/api/documents/doc-eco-survey/relationships")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["doc_id"] == "doc-eco-survey"
+    assert data["total_relationships"] > 0
+    assert isinstance(data["relationships"], list)
+    first_rel = data["relationships"][0]
+    assert "relationship" in first_rel
+    assert "fact_a" in first_rel
+    assert "fact_b" in first_rel
+
+    resp_404 = client.get("/api/documents/non_existent_doc_404/relationships")
+    assert resp_404.status_code == 404
+    assert resp_404.json().get("detail") == "Document not found"
+
+
+
 def test_delete_document_unauthorized():
     """Verify /api/documents/{doc_id} rejects deletion when unauthenticated."""
     response = client.delete("/api/documents/doc-eco-survey")
