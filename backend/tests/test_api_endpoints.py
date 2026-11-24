@@ -231,6 +231,32 @@ def test_relationships_filtered_by_type():
         assert item["relationship"]["relationship_type"] == "corroborates"
 
 
+def test_relationships_search_and_ordering():
+    """Verify /api/relationships search query and sorting by confidence."""
+    res_desc = client.get("/api/relationships?sort_by=confidence&order=desc")
+    assert res_desc.status_code == 200
+    items_desc = res_desc.json()
+    assert len(items_desc) > 1
+    for i in range(len(items_desc) - 1):
+        assert items_desc[i]["relationship"]["confidence"] >= items_desc[i + 1]["relationship"]["confidence"]
+
+    res_asc = client.get("/api/relationships?sort_by=confidence&order=asc")
+    assert res_asc.status_code == 200
+    items_asc = res_asc.json()
+    assert len(items_asc) > 1
+    for i in range(len(items_asc) - 1):
+        assert items_asc[i]["relationship"]["confidence"] <= items_asc[i + 1]["relationship"]["confidence"]
+
+    res_search = client.get("/api/relationships?search=growth")
+    assert res_search.status_code == 200
+    search_items = res_search.json()
+    for item in search_items:
+        rel = item["relationship"]
+        text = f"{rel.get('explanation', '')} {rel.get('reconciliation', '')}".lower()
+        assert "growth" in text
+
+
+
 def test_get_fact_detail_success():
     """Verify /api/facts/{fact_id} retrieves a specific fact with its linked relationships."""
     res_facts = client.get("/api/facts?limit=1")

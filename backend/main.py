@@ -381,15 +381,30 @@ async def list_categories(user_id: Optional[str] = Depends(get_optional_user)) -
 async def list_relationships(
     relationship_type: Optional[str] = Query(None, description="Filter by relationship type (corroborates, contradicts, contextual_difference)"),
     min_confidence: float = Query(0.0, ge=0.0, le=1.0, description="Minimum confidence score"),
+    search: Optional[str] = Query(None, description="Case-insensitive text search on explanation or reconciliation"),
+    sort_by: Optional[str] = Query(None, description="Sort field ('confidence', 'type')"),
+    order: str = Query("desc", description="Sort order: 'asc' or 'desc'"),
     limit: Optional[int] = Query(None, ge=1, le=500, description="Max results limit"),
     offset: int = Query(0, ge=0, description="Number of items to skip"),
     user_id: Optional[str] = Depends(get_optional_user)
 ) -> List[Dict[str, Any]]:
-    """Retrieve cross-document relationships enriched with source and target facts, with optional filtering and pagination."""
+    """Retrieve cross-document relationships enriched with source and target facts, with optional filtering, search, sorting, and pagination."""
     store = FirestoreStore(user_id) if user_id else demo_store
     rels = store.get_relationships(min_confidence=min_confidence)
     if relationship_type:
         rels = [r for r in rels if r.relationship_type.lower() == relationship_type.lower()]
+    if search:
+        s_lower = search.lower()
+        rels = [
+            r for r in rels
+            if s_lower in (r.explanation or "").lower() or s_lower in (r.reconciliation or "").lower()
+        ]
+    if sort_by:
+        reverse = (order.lower() != "asc")
+        if sort_by == "confidence":
+            rels = sorted(rels, key=lambda r: r.confidence, reverse=reverse)
+        elif sort_by in ("type", "relationship_type"):
+            rels = sorted(rels, key=lambda r: r.relationship_type.lower(), reverse=reverse)
     
     # Store API signature is different for demo_store vs FirestoreStore
     if not user_id:
