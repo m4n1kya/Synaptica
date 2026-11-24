@@ -288,6 +288,18 @@ def test_debug_gemini_success_mock():
         assert "Test fact works" in data["raw_text"]
 
 
+def test_debug_gemini_exception_handled():
+    """Verify /api/debug/gemini gracefully handles exceptions raised by genai client."""
+    with patch.dict("os.environ", {"GEMINI_API_KEY": "dummy_key"}), \
+         patch("google.genai.Client", side_effect=RuntimeError("Connection refused by Gemini API")):
+        response = client.get("/api/debug/gemini")
+        assert response.status_code == 200
+        data = response.json()
+        assert data.get("error") == "RuntimeError"
+        assert "Connection refused by Gemini API" in data.get("detail", "")
+
+
+
 def test_invalid_bearer_token_fallback():
     """Verify invalid Authorization header logs warning and falls back to demo mode without 500 error."""
     with patch("firebase_admin.auth.verify_id_token", side_effect=Exception("Invalid token")):
