@@ -95,6 +95,23 @@ class Fact(BaseModel):
         """Return confidence as a percentage float rounded to 1 decimal place."""
         return round(self.confidence * 100, 1)
 
+    @property
+    def word_count(self) -> int:
+        """Return the count of words in the statement text."""
+        return len(self.statement.split()) if self.statement else 0
+
+    @property
+    def evidence_word_count(self) -> int:
+        """Return the count of words in the evidence quote."""
+        return len(self.evidence_text.split()) if self.evidence_text else 0
+
+    def statement_summary(self, max_length: int = 80) -> str:
+        """Produce a truncated statement summary for compact UI display."""
+        text = self.statement.strip()
+        if len(text) <= max_length:
+            return text
+        return text[: max_length - 3].rstrip() + "..."
+
     def is_equivalent(self, other: "Fact") -> bool:
         """Check if two facts assert identical claims based on normalized statement or value/unit in the same category."""
         if not isinstance(other, Fact):
@@ -114,6 +131,8 @@ class Fact(BaseModel):
         data["citation"] = self.formatted_citation()
         data["confidence_percentage"] = self.confidence_percentage
         data["is_numeric"] = self.is_numeric()
+        data["word_count"] = self.word_count
+        data["statement_summary"] = self.statement_summary()
         return data
 
 

@@ -235,4 +235,32 @@ def test_case_study_summary_brief():
     assert case.summary_brief() == "[CORROBORATION] GDP Growth Validation"
 
 
+def test_fact_word_count_and_statement_summary():
+    """Verify Fact.word_count, evidence_word_count, and statement_summary truncation."""
+    short_fact = Fact(
+        id="f_w1",
+        statement="Revenue increased significantly in Q3.",
+        evidence_text="As reported on page 5, overall revenue rose.",
+    )
+    assert short_fact.word_count == 5
+    assert short_fact.evidence_word_count == 8
+    assert short_fact.statement_summary(50) == "Revenue increased significantly in Q3."
+
+    long_fact = Fact(
+        id="f_w2",
+        statement="The quarterly consolidated operating income margin increased by approximately 240 basis points year over year across all regions.",
+    )
+    assert long_fact.word_count == 18
+    summary = long_fact.statement_summary(40)
+    assert len(summary) <= 40
+    assert summary.endswith("...")
+    assert "consolidated" in summary
+
+    # Export dictionary includes these fields
+    export_dict = long_fact.to_export_dict()
+    assert export_dict["word_count"] == 18
+    assert "statement_summary" in export_dict
+
+
+
 
