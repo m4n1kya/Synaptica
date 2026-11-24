@@ -136,9 +136,22 @@ class KnowledgeStore:
             counts[f.category] = counts.get(f.category, 0) + 1
         return dict(sorted(counts.items(), key=lambda x: -x[1]))
 
+    def get_relationship_type_counts(self) -> Dict[str, int]:
+        """Return the count of relationships grouped by relationship_type."""
+        counts = {
+            "corroborates": 0,
+            "contradicts": 0,
+            "contextual_difference": 0,
+            "extraction_failure": 0,
+        }
+        for r in self.relationships.values():
+            counts[r.relationship_type] = counts.get(r.relationship_type, 0) + 1
+        return counts
+
     def get_stats(self) -> KnowledgeLayerStats:
         rels = list(self.relationships.values())
         categories = self.get_category_distribution()
+        rel_counts = self.get_relationship_type_counts()
         total_conf = sum(f.confidence for f in self.facts.values())
 
         n_facts = len(self.facts)
@@ -146,10 +159,10 @@ class KnowledgeStore:
             total_documents=len(self.documents),
             total_facts=n_facts,
             total_relationships=len(rels),
-            corroborations=sum(1 for r in rels if r.relationship_type == "corroborates"),
-            contradictions=sum(1 for r in rels if r.relationship_type == "contradicts"),
-            contextual_differences=sum(1 for r in rels if r.relationship_type == "contextual_difference"),
-            extraction_failures=sum(1 for r in rels if r.relationship_type == "extraction_failure"),
+            corroborations=rel_counts.get("corroborates", 0),
+            contradictions=rel_counts.get("contradicts", 0),
+            contextual_differences=rel_counts.get("contextual_difference", 0),
+            extraction_failures=rel_counts.get("extraction_failure", 0),
             categories=categories,
             avg_confidence=round(total_conf / n_facts, 3) if n_facts > 0 else 0.0
         )

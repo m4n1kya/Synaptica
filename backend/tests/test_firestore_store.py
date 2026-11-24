@@ -242,3 +242,25 @@ def test_firestore_store_get_category_distribution(mock_get_db):
     assert dist == {"Economy": 2, "Logistics": 1}
 
 
+@patch("firestore_store.get_db")
+def test_firestore_store_get_relationship_type_counts(mock_get_db):
+    """Verify FirestoreStore.get_relationship_type_counts tallies types correctly."""
+    mock_db = MagicMock()
+    mock_get_db.return_value = mock_db
+
+    from firestore_store import FirestoreStore
+    from models import Relationship
+    store = FirestoreStore("user_rel_test")
+    r1 = Relationship(id="r1", fact_a_id="fa", fact_b_id="fb", relationship_type="corroborates")
+    r2 = Relationship(id="r2", fact_a_id="fa", fact_b_id="fc", relationship_type="contextual_difference")
+
+    with patch.object(store, "get_relationships", return_value=[r1, r2]):
+        counts = store.get_relationship_type_counts()
+
+    assert counts["corroborates"] == 1
+    assert counts["contextual_difference"] == 1
+    assert counts["contradicts"] == 0
+    assert counts["extraction_failure"] == 0
+
+
+

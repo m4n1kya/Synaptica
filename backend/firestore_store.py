@@ -122,3 +122,15 @@ class FirestoreStore:
         for f in self.get_all_facts():
             counts[f.category] = counts.get(f.category, 0) + 1
         return dict(sorted(counts.items(), key=lambda x: -x[1]))
+
+    def get_relationship_type_counts(self) -> Dict[str, int]:
+        """Return relationship counts grouped by relationship type for the authenticated user."""
+        counts = {
+            "corroborates": 0,
+            "contradicts": 0,
+            "contextual_difference": 0,
+            "extraction_failure": 0,
+        }
+        for r in self.get_relationships():
+            counts[r.relationship_type] = counts.get(r.relationship_type, 0) + 1
+        return counts

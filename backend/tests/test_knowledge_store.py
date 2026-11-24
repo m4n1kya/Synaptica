@@ -254,3 +254,18 @@ def test_knowledge_store_category_distribution():
     assert list(dist.keys())[0] == "Macroeconomics"
 
 
+def test_knowledge_store_relationship_type_counts():
+    """Verify get_relationship_type_counts calculates counts per relationship type accurately."""
+    store = KnowledgeStore(load_demo=False)
+    store.add_relationship(Relationship(id="r1", fact_a_id="f1", fact_b_id="f2", relationship_type="corroborates"))
+    store.add_relationship(Relationship(id="r2", fact_a_id="f1", fact_b_id="f3", relationship_type="corroborates"))
+    store.add_relationship(Relationship(id="r3", fact_a_id="f2", fact_b_id="f3", relationship_type="contradicts"))
+
+    counts = store.get_relationship_type_counts()
+    assert counts["corroborates"] == 2
+    assert counts["contradicts"] == 1
+    assert counts["contextual_difference"] == 0
+    assert counts["extraction_failure"] == 0
+
+
+
