@@ -471,6 +471,18 @@ async def get_cases(user_id: Optional[str] = Depends(get_optional_user)) -> List
         return [c.model_dump() for c in demo_store.cases]
     return []
 
+
+@app.get("/api/cases/{case_id}")
+async def get_case_detail(case_id: str, user_id: Optional[str] = Depends(get_optional_user)) -> Dict[str, Any]:
+    """Retrieve details for a specific benchmark case study by its identifier."""
+    if not user_id:
+        for c in demo_store.cases:
+            if c.id == case_id:
+                return c.model_dump()
+        raise HTTPException(status_code=404, detail="Case study not found")
+    raise HTTPException(status_code=404, detail="Case study not found")
+
+
 # -- Static Frontend -------------------------------------------------------
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")

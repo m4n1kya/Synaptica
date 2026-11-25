@@ -98,6 +98,27 @@ def test_cases_endpoint():
     assert "contradiction" in case_types
 
 
+def test_get_case_detail_success_and_not_found():
+    """Verify /api/cases/{case_id} retrieves a specific case study or returns 404."""
+    res_list = client.get("/api/cases")
+    assert res_list.status_code == 200
+    first_case = res_list.json()[0]
+    case_id = first_case["id"]
+
+    response = client.get(f"/api/cases/{case_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == case_id
+    assert "title" in data
+    assert "case_type" in data
+    assert isinstance(data.get("facts"), list)
+
+    res_404 = client.get("/api/cases/non_existent_case_999")
+    assert res_404.status_code == 404
+    assert res_404.json().get("detail") == "Case study not found"
+
+
+
 def test_facts_filtering_endpoint():
     """Verify /api/facts query endpoint responds with fact list."""
     response = client.get("/api/facts")
