@@ -180,6 +180,26 @@ async def extract_facts_from_chunk(
     return []
 
 
+def deduplicate_facts(facts: List[Fact], merge_pages: bool = True) -> List[Fact]:
+    """
+    Deduplicate extracted facts based on normalized statement text.
+    If merge_pages is True, page numbers from overlapping occurrences are combined,
+    and the higher confidence score is preserved.
+    """
+    seen = {}
+    for f in facts:
+        key = f.statement.lower().strip()
+        if key not in seen:
+            seen[key] = f
+        elif merge_pages:
+            existing = seen[key]
+            combined_pages = sorted(list(set(existing.page_numbers + f.page_numbers)))
+            existing.page_numbers = combined_pages
+            if f.confidence > existing.confidence:
+                existing.confidence = f.confidence
+    return list(seen.values())
+
+
 async def extract_all_facts(
     chunks: List[dict],
     doc_id: str,
@@ -204,13 +224,8 @@ async def extract_all_facts(
         if i < len(chunks) - 1:
             await asyncio.sleep(1)
 
-    # Deduplicate
-    seen, unique = set(), []
-    for f in all_facts:
-        key = f.statement.lower().strip()
-        if key not in seen:
-            seen.add(key)
-            unique.append(f)
+    # Deduplicate with page number merging
+    unique = deduplicate_facts(all_facts, merge_pages=True)
 
     logger.info(f"Total unique facts: {len(unique)}")
     return unique

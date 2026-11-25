@@ -10,6 +10,7 @@ from fact_extractor import (
     _safe_response_text,
     extract_all_facts,
     extract_facts_from_chunk,
+    deduplicate_facts,
 )
 from models import Fact
 
@@ -116,6 +117,31 @@ def test_extract_all_facts_deduplication():
     assert len(unique_facts) == 2
     assert unique_facts[0].id == "f1"
     assert unique_facts[1].id == "f3"
+
+
+def test_deduplicate_facts_standalone():
+    """Verify deduplicate_facts handles page number merging and confidence retention."""
+    f1 = Fact(id="f1", statement="Gross Margin was 28.5%", confidence=0.75, page_numbers=[3])
+    f2 = Fact(id="f2", statement="gross margin was 28.5% ", confidence=0.92, page_numbers=[4, 5])
+    f3 = Fact(id="f3", statement="Operating revenue grew 12%", confidence=0.88, page_numbers=[7])
+
+    # Test with merge_pages=True (default)
+    deduped = deduplicate_facts([f1, f2, f3], merge_pages=True)
+    assert len(deduped) == 2
+    assert deduped[0].id == "f1"
+    assert deduped[0].page_numbers == [3, 4, 5]
+    assert deduped[0].confidence == 0.92
+    assert deduped[1].id == "f3"
+    assert deduped[1].page_numbers == [7]
+
+    # Test with merge_pages=False
+    f1_copy = Fact(id="f1", statement="Gross Margin was 28.5%", confidence=0.75, page_numbers=[3])
+    f2_copy = Fact(id="f2", statement="gross margin was 28.5% ", confidence=0.92, page_numbers=[4, 5])
+    deduped_no_merge = deduplicate_facts([f1_copy, f2_copy], merge_pages=False)
+    assert len(deduped_no_merge) == 1
+    assert deduped_no_merge[0].page_numbers == [3]
+    assert deduped_no_merge[0].confidence == 0.75
+
 
 
 def test_extract_facts_from_chunk_no_api_key():
