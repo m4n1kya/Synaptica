@@ -7,7 +7,7 @@ import logging
 import os
 import re
 import uuid
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from models import Fact, Relationship
 
 logger = logging.getLogger("synaptica.fact_linker")
@@ -59,6 +59,24 @@ def filter_relationships_by_threshold(
 ) -> List[Relationship]:
     """Filter relationships meeting or exceeding a minimum confidence score threshold."""
     return [r for r in relationships if r.confidence >= min_confidence]
+
+
+def get_conflicting_relationships(
+    relationships: List[Relationship]
+) -> List[Relationship]:
+    """Filter relationships to only epistemic conflicts (contradictions and contextual differences)."""
+    return [r for r in relationships if r.relationship_type in ("contradicts", "contextual_difference")]
+
+
+def group_relationships_by_type(
+    relationships: List[Relationship]
+) -> Dict[str, List[Relationship]]:
+    """Group relationships into lists keyed by their relationship_type."""
+    grouped: Dict[str, List[Relationship]] = {}
+    for r in relationships:
+        grouped.setdefault(r.relationship_type, []).append(r)
+    return grouped
+
 
 
 def find_candidate_pairs(facts: List[Fact]) -> List[Tuple[Fact, Fact]]:

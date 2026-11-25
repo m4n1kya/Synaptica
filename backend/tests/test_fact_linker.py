@@ -12,6 +12,8 @@ from fact_linker import (
     link_incremental,
     get_canonical_pair_key,
     filter_relationships_by_threshold,
+    get_conflicting_relationships,
+    group_relationships_by_type,
 )
 
 
@@ -368,6 +370,28 @@ def test_filter_relationships_by_threshold():
     strict = filter_relationships_by_threshold([r_high, r_mid, r_low], min_confidence=0.8)
     assert len(strict) == 1
     assert strict[0].id == "r1"
+
+
+def test_get_conflicting_relationships_and_grouping():
+    """Verify get_conflicting_relationships and group_relationships_by_type utilities."""
+    r_corrob = Relationship(id="r1", fact_a_id="a", fact_b_id="b", relationship_type="corroborates", confidence=0.9)
+    r_contra = Relationship(id="r2", fact_a_id="a", fact_b_id="c", relationship_type="contradicts", confidence=0.8)
+    r_context = Relationship(id="r3", fact_a_id="b", fact_b_id="d", relationship_type="contextual_difference", confidence=0.85)
+
+    all_rels = [r_corrob, r_contra, r_context]
+
+    conflicts = get_conflicting_relationships(all_rels)
+    assert len(conflicts) == 2
+    assert r_contra in conflicts
+    assert r_context in conflicts
+    assert r_corrob not in conflicts
+
+    grouped = group_relationships_by_type(all_rels)
+    assert len(grouped["corroborates"]) == 1
+    assert len(grouped["contradicts"]) == 1
+    assert len(grouped["contextual_difference"]) == 1
+    assert grouped["corroborates"][0].id == "r1"
+
 
 
 
