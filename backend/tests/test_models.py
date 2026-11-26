@@ -262,5 +262,68 @@ def test_fact_word_count_and_statement_summary():
     assert "statement_summary" in export_dict
 
 
+def test_relationship_conflict_and_export_dict():
+    """Verify Relationship.is_epistemic_conflict, summary_label, and to_export_dict."""
+    r_corrob = Relationship(
+        id="rel_c",
+        fact_a_id="fa",
+        fact_b_id="fb",
+        relationship_type="corroborates",
+        confidence=0.925
+    )
+    assert r_corrob.is_epistemic_conflict is False
+    assert r_corrob.summary_label() == "[CORROBORATES] (92.5%)"
+
+    r_contra = Relationship(
+        id="rel_x",
+        fact_a_id="fa",
+        fact_b_id="fc",
+        relationship_type="contradicts",
+        confidence=0.88
+    )
+    assert r_contra.is_epistemic_conflict is True
+    assert r_contra.summary_label() == "[CONTRADICTS] (88.0%)"
+
+    r_context = Relationship(
+        id="rel_d",
+        fact_a_id="fa",
+        fact_b_id="fd",
+        relationship_type="contextual_difference",
+        confidence=0.85
+    )
+    assert r_context.is_epistemic_conflict is True
+
+    export = r_contra.to_export_dict()
+    assert export["confidence_percentage"] == 88.0
+    assert export["is_epistemic_conflict"] is True
+    assert export["summary_label"] == "[CONTRADICTS] (88.0%)"
+
+
+def test_document_display_name_and_export_dict():
+    """Verify Document.formatted_display_name and to_export_dict presentation fields."""
+    doc_named = Document(
+        id="doc_1",
+        filename="01-sample-report.pdf",
+        original_filename="Annual Financial Report 2024",
+        status="processed",
+    )
+    assert doc_named.formatted_display_name() == "Annual Financial Report 2024"
+    export_named = doc_named.to_export_dict()
+    assert export_named["display_name"] == "Annual Financial Report 2024"
+    assert export_named["is_ready"] is True
+
+    doc_fallback = Document(
+        id="doc_2",
+        filename="unnamed-doc.pdf",
+        original_filename="",
+        status="parsing",
+    )
+    assert doc_fallback.formatted_display_name() == "unnamed-doc.pdf"
+    export_fallback = doc_fallback.to_export_dict()
+    assert export_fallback["display_name"] == "unnamed-doc.pdf"
+    assert export_fallback["is_ready"] is False
+
+
+
 
 

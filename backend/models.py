@@ -168,6 +168,23 @@ class Relationship(BaseModel):
             return self.fact_a_id
         return None
 
+    @property
+    def is_epistemic_conflict(self) -> bool:
+        """Indicate whether this relationship represents an analytical discrepancy or contradiction."""
+        return self.relationship_type in ("contradicts", "contextual_difference")
+
+    def summary_label(self) -> str:
+        """Produce a formatted indicator badge string for UI and exports."""
+        return f"[{self.relationship_type.upper()}] ({self.confidence_percentage}%)"
+
+    def to_export_dict(self) -> dict:
+        """Serialize relationship with computed presentation fields."""
+        data = self.model_dump()
+        data["confidence_percentage"] = self.confidence_percentage
+        data["is_epistemic_conflict"] = self.is_epistemic_conflict
+        data["summary_label"] = self.summary_label()
+        return data
+
 
 class Document(BaseModel):
     """A processed PDF document in the knowledge layer."""
@@ -184,6 +201,19 @@ class Document(BaseModel):
     def is_ready(self) -> bool:
         """Check whether document processing has completed successfully."""
         return self.status == DocumentStatus.PROCESSED.value
+
+    def formatted_display_name(self) -> str:
+        """Return the preferred human-readable title or fallback filename."""
+        if self.original_filename and self.original_filename.strip():
+            return self.original_filename.strip()
+        return self.filename
+
+    def to_export_dict(self) -> dict:
+        """Serialize document with computed presentation fields."""
+        data = self.model_dump()
+        data["display_name"] = self.formatted_display_name()
+        data["is_ready"] = self.is_ready()
+        return data
 
 
 class CaseStudy(BaseModel):
