@@ -164,6 +164,41 @@ async def get_stats_summary(user_id: Optional[str] = Depends(get_optional_user))
         "category_distribution": categories,
     }
 
+@app.get("/api/export")
+async def export_knowledge_graph(user_id: Optional[str] = Depends(get_optional_user)) -> Dict[str, Any]:
+    """Export the complete knowledge graph including documents, facts, relationships, categories, and telemetry."""
+    if not user_id:
+        stats = demo_store.get_stats()
+        return {
+            "documents": [d.to_export_dict() for d in demo_store.get_all_documents()],
+            "facts": [f.to_export_dict() for f in demo_store.get_all_facts()],
+            "relationships": [r.to_export_dict() for r in demo_store.get_relationships()],
+            "cases": [c.model_dump() for c in demo_store.cases],
+            "categories": [{"name": k, "count": v} for k, v in stats.categories.items()],
+            "stats": stats.model_dump(),
+        }
+    store = FirestoreStore(user_id)
+    docs = store.get_all_documents()
+    facts = store.get_all_facts()
+    rels = store.get_relationships()
+    cats = store.get_category_distribution()
+    stats_dict = {
+        "total_documents": len(docs),
+        "total_facts": len(facts),
+        "total_relationships": len(rels),
+        "categories": cats,
+        "avg_confidence": round(sum(f.confidence for f in facts) / len(facts), 3) if facts else 0.0,
+        "relationship_breakdown": store.get_relationship_type_counts(),
+    }
+    return {
+        "documents": [d.to_export_dict() for d in docs],
+        "facts": [f.to_export_dict() for f in facts],
+        "relationships": [r.to_export_dict() for r in rels],
+        "cases": [],
+        "categories": [{"name": k, "count": v} for k, v in cats.items()],
+        "stats": stats_dict,
+    }
+
 # -- Documents --------------------------------------------------------------
 
 @app.get("/api/documents")

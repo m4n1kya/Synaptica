@@ -59,6 +59,69 @@ def test_stats_summary_endpoint():
     assert "contradictions" in data["relationship_breakdown"]
 
 
+def test_export_endpoint_demo():
+    """Verify /api/export returns complete knowledge graph in guest demo mode."""
+    response = client.get("/api/export")
+    assert response.status_code == 200
+    data = response.json()
+    assert "documents" in data
+    assert "facts" in data
+    assert "relationships" in data
+    assert "cases" in data
+    assert "categories" in data
+    assert "stats" in data
+    assert len(data["documents"]) > 0
+    assert len(data["facts"]) > 0
+    assert len(data["relationships"]) > 0
+    assert len(data["cases"]) == 4
+
+    # Check export fields on entities
+    first_doc = data["documents"][0]
+    assert "display_name" in first_doc
+    assert "is_ready" in first_doc
+
+    first_fact = data["facts"][0]
+    assert "citation" in first_fact
+    assert "confidence_percentage" in first_fact
+
+    first_rel = data["relationships"][0]
+    assert "summary_label" in first_rel
+    assert "is_epistemic_conflict" in first_rel
+
+
+def test_export_endpoint_authenticated():
+    """Verify /api/export returns authenticated user's knowledge graph."""
+    mock_doc = MagicMock()
+    mock_doc.to_export_dict.return_value = {"id": "d1", "display_name": "User Doc", "is_ready": True}
+
+    mock_fact = MagicMock()
+    mock_fact.confidence = 0.95
+    mock_fact.to_export_dict.return_value = {"id": "f1", "statement": "User Fact", "citation": "p. 1"}
+
+    mock_rel = MagicMock()
+    mock_rel.to_export_dict.return_value = {"id": "r1", "summary_label": "[CORROBORATES] (95.0%)"}
+
+    with patch("firebase_admin.auth.verify_id_token", return_value={"uid": "user_auth_export"}), \
+         patch("main.FirestoreStore") as MockStore:
+        mock_instance = MockStore.return_value
+        mock_instance.get_all_documents.return_value = [mock_doc]
+        mock_instance.get_all_facts.return_value = [mock_fact]
+        mock_instance.get_relationships.return_value = [mock_rel]
+        mock_instance.get_category_distribution.return_value = {"General": 1}
+        mock_instance.get_relationship_type_counts.return_value = {"corroborates": 1}
+
+        response = client.get("/api/export", headers={"Authorization": "Bearer export_token"})
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["documents"]) == 1
+        assert len(data["facts"]) == 1
+        assert len(data["relationships"]) == 1
+        assert data["stats"]["total_documents"] == 1
+        assert data["stats"]["total_facts"] == 1
+
+
+
+
 def test_documents_endpoint():
     """Verify /api/documents returns an array of ingested document summaries."""
     response = client.get("/api/documents")
